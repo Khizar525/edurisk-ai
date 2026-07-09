@@ -1,0 +1,75 @@
+# ── Python ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Virtual Environments ───────────────────────────────────────
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# ── IDE / Editor ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ── Jupyter ────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# ── Data (too large for git) ──────────────────────────────────
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# ── Model Artifacts (too large for git) ───────────────────────
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+models/*.onnx
+!models/.gitkeep
+!models/README.md
+
+# ── Logs ───────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── OS ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Environment Variables ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Kaggle ─────────────────────────────────────────────────────
+.kaggle/
+kaggle.json
+
+# ── Google Colab ───────────────────────────────────────────────
+/content/
+
+# ── Misc ───────────────────────────────────────────────────────
+*.zip
+*.tar.gz
+*.csv
+!requirements.txt

@@ -1,0 +1,1 @@
+"""EduRisk AI — Gradio Application."""
