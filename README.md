@@ -110,7 +110,7 @@ graph TB
         L --> O[Gradio Dashboard]
         M --> P[Waterfall Plots]
         M --> Q[Interpretation]
-        O --> R[Tabs: Predict | Analytics | About]
+        O --> R["Tabs: Predict, Analytics, About"]
     end
 
     style G fill:#ffcdd2
