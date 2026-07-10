@@ -118,7 +118,8 @@ class PredictionResponse(BaseModel):
     confidence: str = Field(..., description="Model confidence percentage")
     confidence_value: float = Field(..., description="Raw confidence value (0-1)")
     advice: str = Field(..., description="Recommendation based on risk level")
-    probabilities: dict = Field(..., description="Class probabilities (percentage)")
+    probabilities: dict = Field(..., description="Class probabilities (emoji keys)")
+    probabilities_raw: dict = Field(..., description="Class probabilities (numeric keys: 0=Low, 1=Med, 2=High)")
     shap: dict = Field(..., description="SHAP explanation data")
 
 
@@ -207,6 +208,7 @@ async def predict(request: PredictionRequest):
         confidence_value=result["confidence_value"],
         advice=result["advice"],
         probabilities=result["probabilities"],
+        probabilities_raw=result["probabilities_raw"],
         shap=result["shap"],
     )
 

@@ -15,9 +15,9 @@
 
 <br>
 
-An end-to-end machine learning system that predicts the **academic risk level** (Low / Medium / High) of university students using self-reported lifestyle, psychological, and academic indicators — with **SHAP explainability** and a **live Gradio dashboard**.
+An end-to-end machine learning system that predicts the **academic risk level** (Low / Medium / High) of university students using self-reported lifestyle, psychological, and academic indicators — with **SHAP explainability**, a **Next.js + Tailwind frontend**, and a **FastAPI REST API**.
 
-[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Results](#-results) • [Deployment](#-deployment) • [Documentation](#-documentation)
+[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Screenshots](#-screenshots) • [Results](#-results) • [Deployment](#-deployment) • [Documentation](#-documentation)
 
 </div>
 
@@ -38,6 +38,7 @@ The system compares **four classifiers** — Random Forest, SVM, XGBoost, and ML
 | **SHAP Explainability** | Global feature importance + per-prediction waterfall plots |
 | **Risk Engineering** | Composite scoring → 3-class academic risk levels |
 | **Live Dashboard** | Modern Gradio UI with risk gauge, probability charts, analytics |
+| **Next.js Frontend** | Professional dark-mode UI with Tailwind CSS + Framer Motion |
 | **REST API** | FastAPI service with /predict, /health, /model/info endpoints |
 | **Prediction Logging** | Timestamped CSV with analytics and export |
 | **Error Analysis** | Misclassification patterns and feature comparison |
@@ -139,8 +140,12 @@ flowchart LR
 
 ```
 edurisk-ai/
-├── app/                    # Gradio application
-│   └── main.py             # UI layout, prediction function
+├── app/                    # Gradio application + FastAPI
+│   ├── main.py             # Gradio UI layout
+│   └── api.py              # FastAPI REST API
+├── frontend/               # Next.js + Tailwind frontend
+│   ├── src/app/page.tsx    # Main page component
+│   └── src/components/     # UI components (Gauge, SHAP, etc.)
 ├── src/                    # Core ML package
 │   ├── config.py           # Central configuration
 │   ├── data/               # Data loading and validation
@@ -151,13 +156,34 @@ edurisk-ai/
 │   ├── explainability/     # SHAP utilities
 │   ├── inference/          # Prediction service and logging
 │   └── utils/              # Shared utilities
-├── tests/                  # 53 unit tests
+├── tests/                  # 62 unit tests
 ├── notebooks/              # Jupyter notebooks
 ├── docs/                   # Documentation (Mermaid diagrams)
+├── assets/                 # Charts, screenshots, model figures
 ├── models/                 # Saved model artifacts
 ├── data/                   # Raw and processed data
 └── docker/                 # Containerization
 ```
+
+---
+
+## Screenshots
+
+### Dashboard — Empty State
+
+![Dashboard](assets/images/screenshot-dashboard.png)
+
+### Prediction — High Risk Result
+
+![Prediction](assets/images/screenshot-prediction.png)
+
+### SHAP Feature Contributions
+
+![SHAP Waterfall](assets/images/screenshot-factors.png)
+
+### FastAPI Swagger UI
+
+![Swagger](assets/images/screenshot-swagger.png)
 
 ---
 
@@ -253,10 +279,13 @@ flowchart TD
 
 ## Deployment
 
-### Local — Gradio Dashboard
+### Local — Next.js Frontend (Recommended)
 
 ```bash
-python -m app.main
+cd frontend
+npm install
+npm run dev
+# Frontend: http://localhost:3000
 ```
 
 ### Local — FastAPI REST API
@@ -264,6 +293,12 @@ python -m app.main
 ```bash
 uvicorn app.api:app --host 0.0.0.0 --port 8000
 # API docs: http://localhost:8000/docs
+```
+
+### Local — Gradio Dashboard
+
+```bash
+python -m app.main
 ```
 
 ### Docker
@@ -331,6 +366,7 @@ TRAINING.optuna_n_trials = 50
 - [x] SHAP waterfall plots and human-readable interpretations
 - [x] Modern dashboard with analytics and export
 - [x] FastAPI REST API alongside Gradio
+- [x] Next.js + Tailwind professional frontend with SHAP explainability
 - [ ] MLflow experiment tracking
 - [ ] PostgreSQL prediction logging
 - [ ] A/B testing framework
