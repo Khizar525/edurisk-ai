@@ -1,8 +1,10 @@
 <div align="center">
 
+![EduRisk AI Banner](assets/images/banner.png)
+
 # EduRisk AI
 
-### Production-Oriented Machine Learning for Academic Risk Prediction
+### Explainable Machine Learning for Academic Risk Prediction
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
@@ -11,13 +13,15 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-14+-000000.svg?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-62%20passing-brightgreen.svg?style=for-the-badge)](#testing)
+[![Tests](https://img.shields.io/badge/62-Tests-passing-brightgreen.svg?style=for-the-badge)](#testing)
 
 <br>
 
-**EduRisk AI is a production-oriented machine learning platform for predicting academic risk using explainable AI.** Built with Python, FastAPI, Next.js, SHAP, and Scikit-learn, it demonstrates the complete machine learning lifecycle — from data preprocessing and model training to real-time inference and interactive visualization.
+**EduRisk AI predicts which university students are at academic risk — and explains exactly why.**
 
-[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Screenshots](#-screenshots) • [Results](#-results) • [Deployment](#-deployment) • [Documentation](#-documentation)
+It combines four ML classifiers with SHAP explainability, a FastAPI REST API, and an interactive Next.js dashboard to deliver real-time risk assessments with per-prediction feature contributions.
+
+[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Screenshots](#-screenshots) • [Results](#-results) • [API](#rest-api) • [Documentation](#documentation)
 
 </div>
 
@@ -25,17 +29,18 @@
 
 ## Why This Project?
 
-Most machine learning repositories stop at training a model.
+Most ML repositories stop at training a model. EduRisk AI goes further — it demonstrates the **full machine learning lifecycle** as it works in production:
 
-EduRisk AI was designed to demonstrate **production-oriented machine learning engineering** by combining:
-
-- Reproducible preprocessing pipelines with no data leakage
-- Explainable AI with SHAP (global + per-prediction)
-- REST APIs with FastAPI
-- Interactive web applications with Next.js and Tailwind CSS
-- Modular software architecture across 8+ packages
-- Automated testing (62 unit tests)
-- Containerized deployment with Docker
+| Stage | What EduRisk AI Does |
+|-------|---------------------|
+| **Data** | 27,901 student records, 11 selected features, 3-class risk target |
+| **Preprocessing** | Leakage-free pipeline — scaler fit on train only |
+| **Training** | 4 models compared with GridSearchCV + Optuna Bayesian tuning |
+| **Evaluation** | Accuracy, ROC-AUC, per-class metrics, error analysis, calibration |
+| **Explainability** | SHAP TreeExplainer — global importance + per-prediction waterfall |
+| **Serving** | FastAPI REST API + Next.js frontend + Gradio dashboard |
+| **Testing** | 62 unit tests across all modules |
+| **Deployment** | Docker containerization, CI/CD with GitHub Actions |
 
 The project emphasizes **engineering quality** as much as predictive performance.
 
@@ -43,57 +48,202 @@ The project emphasizes **engineering quality** as much as predictive performance
 
 ## Tech Stack
 
-| Category | Technologies |
-|----------|-------------|
-| **Frontend** | Next.js, TypeScript, Tailwind CSS, Framer Motion |
-| **Backend** | FastAPI, Gradio, Uvicorn |
-| **Machine Learning** | Scikit-learn, XGBoost, Optuna, SHAP |
+<div align="center">
+
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | Next.js 15, TypeScript, Tailwind CSS v4, Framer Motion |
+| **API** | FastAPI, Uvicorn, Pydantic validation |
+| **ML** | Scikit-learn, XGBoost, SHAP, Optuna |
 | **Data** | Pandas, NumPy, Kaggle API |
-| **DevOps** | Docker, GitHub Actions |
-| **Testing** | Pytest, Coverage |
+| **DevOps** | Docker, GitHub Actions, Pytest |
+| **Dashboard** | Gradio (alternative interface) |
+
+</div>
 
 ---
 
-## Overview
+## Architecture
 
-Every year, universities lose students to academic failure and mental health crises that could have been intercepted earlier. **EduRisk AI** uses machine learning to predict which students are at high academic risk based on survey data — and explains exactly why.
+EduRisk AI separates training, inference, and presentation into independent layers — the same prediction engine serves the REST API, the Next.js frontend, and the Gradio dashboard.
 
-The system compares **four classifiers** — Random Forest, SVM, XGBoost, and MLP — with hyperparameter tuning (GridSearchCV or Optuna), cross-validation, and SHAP-based explainability. The same prediction engine serves three interfaces: a Next.js web app, a FastAPI REST API, and a Gradio dashboard.
+```mermaid
+graph TB
+    subgraph "Data Layer"
+        A[Kaggle API] --> B[Raw CSV]
+        B --> C[Validation]
+    end
 
-### Project Statistics
+    subgraph "Processing"
+        C --> D[Imputation]
+        D --> E[Encoding]
+        E --> F[Risk Engineering]
+    end
 
-| Metric | Value |
-|--------|-------|
-| Dataset Size | 27,901 students |
-| Features Used | 11 |
-| Models Evaluated | 4 |
-| Best Accuracy | 85.58% |
-| Best ROC-AUC | 94.92% |
-| Unit Tests | 62 |
-| Frontends | 2 (Next.js + Gradio) |
-| REST API Endpoints | 3 |
+    subgraph "Training"
+        F --> G[Split]
+        G --> H[Scale - Train Only]
+        H --> I[4 Models]
+        I --> J[Tuning - GridSearch/Optuna]
+        J --> K[Best Model]
+    end
 
-### Capabilities
+    subgraph "Inference"
+        K --> L[Predictor]
+        L --> M[SHAP Explainer]
+        L --> N[Logger]
+    end
 
-**Machine Learning**
-- Multi-model training and comparison (Random Forest, SVM, XGBoost, MLP)
-- Hyperparameter optimization (GridSearchCV + Optuna Bayesian)
-- SHAP explainability with waterfall plots and human-readable interpretations
-- Composite risk scoring → 3-class academic risk levels
-- Error analysis with misclassification patterns
+    subgraph "Presentation"
+        L --> O[Next.js Frontend]
+        L --> P[FastAPI REST API]
+        L --> Q[Gradio Dashboard]
+        M --> R[Waterfall Plots]
+    end
 
-**Engineering**
-- FastAPI REST API with `/predict`, `/health`, `/model/info` endpoints
-- Next.js frontend with dark-mode UI, animated gauges, and SHAP visualizations
-- Gradio dashboard with real-time risk assessment
-- Docker containerization
-- Timestamped prediction logging with analytics
+    style G fill:#ffcdd2
+    style H fill:#c8e6c9
+    style O fill:#e3f2fd
+```
 
-**MLOps**
-- Reproducible pipeline (no data leakage, fixed random seeds)
-- Centralized configuration management
-- Saved model artifacts and preprocessing pipelines
-- 62 unit tests across all modules
+### Data Flow (No Data Leakage)
+
+```mermaid
+flowchart LR
+    A[Load] --> B[Impute]
+    B --> C[Encode]
+    C --> D[Risk Target]
+    D --> E[Split 80/20]
+    E --> F[Fit Scaler on Train]
+    F --> G[Transform Train]
+    F --> H[Transform Test]
+    G --> I[Train]
+    I --> J[Evaluate]
+
+    style E fill:#ffcdd2
+    style F fill:#c8e6c9
+```
+
+---
+
+## Screenshots
+
+<div align="center">
+
+**Dashboard — Dark Mode UI**
+
+![Dashboard](assets/images/screenshot-dashboard.png)
+
+</div>
+
+<div align="center">
+
+**Prediction with SHAP Explainability**
+
+![Prediction](assets/images/screenshot-prediction.png)
+
+</div>
+
+<div align="center">
+
+**SHAP Feature Contributions**
+
+![SHAP Waterfall](assets/images/screenshot-factors.png)
+
+</div>
+
+<div align="center">
+
+**REST API — Swagger Documentation**
+
+![Swagger](assets/images/screenshot-swagger.png)
+
+</div>
+
+---
+
+## Results
+
+> **Best Model — Random Forest**
+>
+> Accuracy: **85.58%** · ROC-AUC: **94.92%** · CV: **85.27 ± 0.39%**
+
+Although XGBoost achieved a slightly higher ROC-AUC (95.02%), Random Forest was selected for deployment because it provided the best balance between accuracy, calibration, inference speed, and SHAP interpretability. TreeExplainer on Random Forest produces exact, consistent feature attributions — critical for a system that must explain its predictions to non-technical stakeholders.
+
+| Model | Accuracy | ROC-AUC | 3-Fold CV |
+|-------|----------|---------|-----------|
+| **Random Forest** | **85.58%** | **94.92%** | 85.27 ± 0.39% |
+| XGBoost | 85.24% | 95.02% | 85.88 ± 0.27% |
+| MLP | 85.18% | 94.69% | 84.66 ± 0.46% |
+| SVM | 82.12% | 93.10% | 82.40 ± 0.19% |
+
+![Model Comparison](assets/images/model-comparison.png)
+
+### Per-Class Performance (Random Forest)
+
+| Class | Precision | Recall | F1-Score |
+|-------|-----------|--------|----------|
+| Low Risk | 0.87 | 0.88 | 0.88 |
+| Medium Risk | 0.70 | 0.59 | 0.64 |
+| High Risk | 0.91 | 0.97 | 0.94 |
+
+![Confusion Matrix](assets/images/confusion-matrix.png)
+![Per-Class Metrics](assets/images/per-class-metrics.png)
+
+> See [docs/results.md](docs/results.md) for detailed analysis. See [MODEL_CARD.md](MODEL_CARD.md) for model documentation.
+
+---
+
+## REST API
+
+The FastAPI backend exposes three endpoints:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/predict` | Risk prediction with SHAP explanation |
+| `GET` | `/health` | Model health check |
+| `GET` | `/model/info` | Model metadata and feature names |
+
+### Example Request
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gender": "Male",
+    "age": 22,
+    "academic_pressure": 5,
+    "cgpa": 1.5,
+    "study_satisfaction": 1,
+    "sleep_duration": "Less than 5 hours",
+    "dietary_habits": "Unhealthy",
+    "work_study_hours": 10,
+    "financial_stress": 5,
+    "family_history": "Yes",
+    "suicidal_thoughts": "Yes"
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "prediction": 2,
+  "risk_level": "High Risk",
+  "risk_label": "High Risk",
+  "confidence": "94.9%",
+  "confidence_value": 0.949,
+  "probabilities_raw": {"0": 0.0, "1": 0.05, "2": 0.95},
+  "shap": {
+    "sorted_features": ["Suicidal Thoughts", "Financial Stress", "CGPA"],
+    "shap_values": [0.332, 0.117, -0.112],
+    "top_risk": [{"feature": "Suicidal Thoughts", "impact": 0.332}],
+    "top_protective": [{"feature": "CGPA", "impact": -0.112}]
+  }
+}
+```
+
+Interactive docs available at `http://localhost:8000/docs` when the server is running.
 
 ---
 
@@ -128,272 +278,15 @@ uvicorn app.api:app --host 0.0.0.0 --port 8000
 cd frontend
 npm install
 npm run dev
-```
-
-The application will be available at `http://localhost:3000`.
-
-> The Gradio interface remains available as an alternative demonstration interface via `python -m app.main`.
-
-### Model Training
-
-```bash
-# Train all models and save best
-python -m src.training.trainer
-```
-
----
-
-## Live Demo
-
-🚧 **Coming Soon**
-
-| Interface | Platform |
-|-----------|----------|
-| Frontend (Next.js) | Vercel |
-| REST API (FastAPI) | Render |
-| Swagger Docs | Render |
-| Docker Deployment | Docker Hub |
-
----
-
-## Architecture
-
-EduRisk AI separates training, inference, and presentation into independent layers, allowing the same prediction engine to serve both the REST API and web interfaces.
-
-```mermaid
-graph TB
-    subgraph "Data Layer"
-        A[Kaggle API] --> B[Raw CSV]
-        B --> C[Validation]
-    end
-
-    subgraph "Processing"
-        C --> D[Imputation]
-        D --> E[Encoding]
-        E --> F[Risk Engineering]
-    end
-
-    subgraph "Training"
-        F --> G[Split]
-        G --> H[Scale - Train Only]
-        H --> I[4 Models]
-        I --> J[Tuning - GridSearch/Optuna]
-        J --> K[Best Model]
-    end
-
-    subgraph "Inference"
-        K --> L[Predictor]
-        L --> M[SHAP Explainer]
-        L --> N[Logger]
-    end
-
-    subgraph "UI"
-        L --> O[Gradio Dashboard]
-        M --> P[Waterfall Plots]
-        M --> Q[Interpretation]
-        O --> R["Tabs: Predict, Analytics, About"]
-    end
-
-    style G fill:#ffcdd2
-    style H fill:#c8e6c9
-    style O fill:#fff3e0
-```
-
-### Data Flow (No Leakage)
-
-```mermaid
-flowchart LR
-    A[Load] --> B[Impute]
-    B --> C[Encode]
-    C --> D[Risk Target]
-    D --> E[Split 80/20]
-    E --> F[Fit Scaler on Train]
-    F --> G[Transform Train]
-    F --> H[Transform Test]
-    G --> I[Train]
-    I --> J[Evaluate]
-
-    style E fill:#ffcdd2
-    style F fill:#c8e6c9
-```
-
-### Repository Structure
-
-```
-edurisk-ai/
-├── app/                    # Gradio application + FastAPI
-│   ├── main.py             # Gradio UI layout
-│   └── api.py              # FastAPI REST API
-├── frontend/               # Next.js + Tailwind frontend
-│   ├── src/app/page.tsx    # Main page component
-│   └── src/components/     # UI components (Gauge, SHAP, etc.)
-├── src/                    # Core ML package
-│   ├── config.py           # Central configuration
-│   ├── data/               # Data loading and validation
-│   ├── preprocessing/      # Cleaning, encoding, scaling
-│   ├── features/           # Feature engineering
-│   ├── training/           # Model training and tuning
-│   ├── evaluation/         # Metrics, plots, error analysis
-│   ├── explainability/     # SHAP utilities
-│   ├── inference/          # Prediction service and logging
-│   └── utils/              # Shared utilities
-├── tests/                  # 62 unit tests
-├── notebooks/              # Jupyter notebooks
-├── docs/                   # Documentation (Mermaid diagrams)
-├── assets/                 # Charts, screenshots, model figures
-├── models/                 # Saved model artifacts
-├── data/                   # Raw and processed data
-└── docker/                 # Containerization
-```
-
----
-
-## Screenshots
-
-### Dashboard — Empty State
-
-![Dashboard](assets/images/screenshot-dashboard.png)
-
-### Prediction — High Risk Result
-
-![Prediction](assets/images/screenshot-prediction.png)
-
-### SHAP Feature Contributions
-
-![SHAP Waterfall](assets/images/screenshot-factors.png)
-
-### FastAPI Swagger UI
-
-![Swagger](assets/images/screenshot-swagger.png)
-
----
-
-## Dataset
-
-**Student Depression Dataset** — [Kaggle](https://www.kaggle.com/datasets/hopesb/student-depression-dataset)
-
-| Property | Value |
-|----------|-------|
-| Records | ~27,000 |
-| Features | 27 (11 selected for modeling) |
-| Target | 3-class Risk Level (Low / Medium / High) |
-| Source | Student self-report survey |
-
-### Selected Features
-
-| Feature | Type | Description |
-|---------|------|-------------|
-| Gender | Categorical | Student gender |
-| Age | Numerical | Student age |
-| Academic Pressure | Ordinal (1-5) | Self-reported academic pressure |
-| CGPA | Numerical | Cumulative GPA |
-| Study Satisfaction | Ordinal (1-5) | Satisfaction with study conditions |
-| Sleep Duration | Categorical | Daily sleep hours |
-| Dietary Habits | Categorical | General diet quality |
-| Work/Study Hours | Numerical | Daily study/work hours |
-| Financial Stress | Ordinal (1-5) | Self-reported financial stress |
-| Family History | Categorical | Family history of mental illness |
-| Suicidal Thoughts | Categorical | History of suicidal ideation |
-
-### Limitations
-
-- **Self-reported data**: All features rely on student self-assessment, which may introduce response bias
-- **Survey bias**: The dataset was collected via online surveys, potentially over-representing certain demographics
-- **Demographic limitations**: The dataset may not generalize across all university populations, cultural contexts, or educational systems
-- **Temporal snapshot**: Data represents a single point in time rather than longitudinal tracking
-
----
-
-## Methodology
-
-### Pipeline
-
-```mermaid
-flowchart TD
-    A[1. Data Collection] --> B[2. EDA]
-    B --> C[3. Preprocessing]
-    C --> D[4. Feature Engineering]
-    D --> E[5. Model Training]
-    E --> F[6. Evaluation]
-    F --> G[7. SHAP Explainability]
-    G --> H[8. Deployment]
-```
-
-### Models
-
-| Model | Type | Tuning | SHAP |
-|-------|------|--------|------|
-| Random Forest | Ensemble (bagging) | GridSearchCV / Optuna | TreeExplainer |
-| SVM (RBF) | Kernel method | GridSearchCV / Optuna | KernelExplainer |
-| XGBoost | Ensemble (boosting) | GridSearchCV / Optuna | TreeExplainer |
-| MLP | Neural network | GridSearchCV / Optuna | KernelExplainer |
-
-### Evaluation
-
-- **Metrics**: Accuracy, ROC-AUC (OvR), 5-fold CV, Precision, Recall, F1
-- **Visualizations**: Confusion matrices, ROC curves, PR curves, calibration plots, learning curves, radar charts
-- **Error Analysis**: Misclassification patterns, feature comparison, confusion pairs
-
----
-
-## Results
-
-> **Best Performing Model — Random Forest**
->
-> - Accuracy: **85.58%**
-> - ROC-AUC: **94.92%**
-> - Cross-validation: **85.27 ± 0.39%**
-> - Selected for deployment due to its balance of predictive performance and interpretability.
-
-Although XGBoost achieved a slightly higher ROC-AUC (95.02%), Random Forest was selected because it provided the best balance between overall accuracy, calibration, inference speed, and SHAP interpretability. TreeExplainer on Random Forest produces exact, consistent feature attributions — critical for a system that must explain its predictions to non-technical stakeholders.
-
-| Model | Accuracy | ROC-AUC | 3-Fold CV |
-|-------|----------|---------|-----------|
-| **Random Forest** | **85.58%** | **94.92%** | 85.27 ± 0.39% |
-| XGBoost | 85.24% | 95.02% | 85.88 ± 0.27% |
-| MLP | 85.18% | 94.69% | 84.66 ± 0.46% |
-| SVM | 82.12% | 93.10% | 82.40 ± 0.19% |
-
-![Model Comparison](assets/images/model-comparison.png)
-
-### Per-Class Performance (Random Forest)
-
-| Class | Precision | Recall | F1-Score |
-|-------|-----------|--------|----------|
-| Low Risk | 0.87 | 0.88 | 0.88 |
-| Medium Risk | 0.70 | 0.59 | 0.64 |
-| High Risk | 0.91 | 0.97 | 0.94 |
-
-![Confusion Matrix](assets/images/confusion-matrix.png)
-![Per-Class Metrics](assets/images/per-class-metrics.png)
-
-> See [docs/results.md](docs/results.md) for detailed analysis and visualizations.
-> See [MODEL_CARD.md](MODEL_CARD.md) for model documentation.
-
----
-
-## Deployment
-
-### Local — Next.js Frontend (Recommended)
-
-```bash
-cd frontend
-npm install
-npm run dev
 # Frontend: http://localhost:3000
 ```
 
-### Local — FastAPI REST API
+> The Gradio interface is also available via `python -m app.main` as a lightweight alternative.
+
+### Train Models
 
 ```bash
-uvicorn app.api:app --host 0.0.0.0 --port 8000
-# API docs: http://localhost:8000/docs
-```
-
-### Local — Gradio Dashboard
-
-```bash
-python -m app.main
+python -m src.training.trainer
 ```
 
 ### Docker
@@ -403,9 +296,76 @@ cd docker
 docker-compose up --build
 ```
 
-### Gradio Share
+---
 
-The app supports `share=True` for temporary public URLs via ngrok.
+## Repository Structure
+
+```
+edurisk-ai/
+├── app/                    # Application layer
+│   ├── main.py             # Gradio dashboard
+│   └── api.py              # FastAPI REST API
+├── frontend/               # Next.js + Tailwind frontend
+│   └── src/components/     # React components (Gauge, SHAP, etc.)
+├── src/                    # Core ML library
+│   ├── config.py           # Centralized configuration
+│   ├── data/               # Data loading and validation
+│   ├── preprocessing/      # Imputation, encoding, scaling
+│   ├── features/           # Risk engineering
+│   ├── training/           # Model training and tuning
+│   ├── evaluation/         # Metrics, plots, error analysis
+│   ├── explainability/     # SHAP utilities
+│   ├── inference/          # Prediction service and logging
+│   └── utils/              # Validators and helpers
+├── tests/                  # 62 unit tests
+├── docs/                   # Architecture, methodology, results
+├── assets/                 # Charts, screenshots, figures
+├── models/                 # Saved model artifacts
+├── data/                   # Raw and processed data
+├── docker/                 # Containerization
+├── scripts/                # Chart generation scripts
+└── notebooks/              # Jupyter notebooks
+```
+
+---
+
+## Dataset
+
+**Student Depression Dataset** — [Kaggle](https://www.kaggle.com/datasets/hopesb/student-depression-dataset)
+
+| Property | Value |
+|----------|-------|
+| Records | 27,901 |
+| Features Used | 11 (selected from 27) |
+| Target | 3-class Risk Level (Low / Medium / High) |
+| Source | Student self-report survey |
+
+### Limitations
+
+- **Self-reported data** — features rely on student self-assessment, which may introduce response bias
+- **Survey bias** — collected via online surveys, potentially over-representing certain demographics
+- **Demographic limitations** — may not generalize across all university populations or cultural contexts
+- **Temporal snapshot** — represents a single point in time rather than longitudinal tracking
+
+---
+
+## Design Decisions
+
+### Why Random Forest over XGBoost?
+
+XGBoost had slightly higher ROC-AUC (95.02% vs 94.92%), but Random Forest was selected because: (1) higher overall accuracy (85.58% vs 85.24%), (2) better calibration, (3) faster inference, and (4) TreeExplainer produces exact, consistent SHAP attributions — critical for explainability.
+
+### Why SHAP over LIME or Permutation Importance?
+
+SHAP provides both global feature importance and per-prediction explanations with mathematical guarantees (Shapley values). TreeExplainer on tree models gives exact attributions in polynomial time, making it production-viable.
+
+### Why FastAPI alongside Gradio?
+
+FastAPI provides automatic OpenAPI documentation, native async support, and Pydantic validation — making the API self-documenting and production-ready. Gradio serves as a rapid prototyping interface for demos.
+
+### Why Next.js over React + Vite?
+
+Next.js provides server-side rendering, file-based routing, and a mature ecosystem for deployment on Vercel. TypeScript + Tailwind CSS made building the dark-mode UI fast and maintainable.
 
 ---
 
@@ -421,26 +381,6 @@ TRAINING.use_optuna = True    # Optuna (Bayesian)
 # Adjust trials (Optuna only)
 TRAINING.optuna_n_trials = 50
 ```
-
----
-
-## Design Decisions
-
-### Why FastAPI over Flask?
-
-FastAPI provides automatic OpenAPI/Swagger documentation, native async support, and Pydantic request validation — eliminating boilerplate and making the API self-documenting for frontend integration.
-
-### Why SHAP over LIME or Permutation Importance?
-
-SHAP provides both global feature importance and per-prediction explanations with mathematical guarantees (Shapley values). TreeExplainer on tree models gives exact attributions in polynomial time, making it production-viable.
-
-### Why Next.js over React + Vite?
-
-Next.js provides server-side rendering, file-based routing, and a mature ecosystem for deployment on Vercel. TypeScript integration and Tailwind CSS made building the dark-mode UI fast and maintainable.
-
-### Why keep Gradio alongside Next.js?
-
-Gradio serves as a rapid prototyping and demonstration interface that requires zero frontend setup. It's ideal for instructor demos, quick testing, and as a fallback when the Next.js frontend isn't running.
 
 ---
 
@@ -466,27 +406,26 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 
 ## Documentation
 
-- 📖 [Architecture Guide](docs/architecture.md) — System design with Mermaid diagrams
-- 🧠 [ML Methodology](docs/methodology.md) — Pipeline, feature selection, model details
-- 🏗️ [Results & Metrics](docs/results.md) — Performance analysis and error patterns
-- 📋 [Model Card](MODEL_CARD.md) — Model details, performance, and usage
+- [Architecture Guide](docs/architecture.md) — system design with Mermaid diagrams
+- [ML Methodology](docs/methodology.md) — pipeline, feature selection, model details
+- [Results & Metrics](docs/results.md) — performance analysis and error patterns
+- [Model Card](MODEL_CARD.md) — model details, fairness, and usage
+- [Contributing Guide](CONTRIBUTING.md) — how to contribute
 
 ---
 
-## Future Work
+## Roadmap
 
-- [x] Optuna-based hyperparameter optimization
-- [x] CI/CD pipeline with GitHub Actions
-- [x] Error analysis module
-- [x] SHAP waterfall plots and human-readable interpretations
-- [x] Modern dashboard with analytics and export
-- [x] FastAPI REST API alongside Gradio
-- [x] Next.js + Tailwind professional frontend with SHAP explainability
+- [x] Multi-model training with hyperparameter tuning
+- [x] SHAP explainability with waterfall plots
+- [x] FastAPI REST API with Swagger documentation
+- [x] Next.js dark-mode frontend with animated visualizations
+- [x] Docker containerization
+- [x] CI/CD with GitHub Actions
 - [ ] MLflow experiment tracking
-- [ ] Cloud deployment
+- [ ] Cloud deployment (Vercel + Render)
 - [ ] Continuous model monitoring
 - [ ] Authentication and multi-user support
-- [ ] Expanded dataset validation
 
 ---
 
@@ -506,15 +445,15 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <div align="center">
 
-### Contributors
+### Built by the EduRisk AI Team
 
-| Name | Primary Responsibilities |
-|------|--------------------------|
-| **M. Khizar Akram (Team Lead)** | Project Lead — Led overall project architecture and integration, designed and implemented the application layer, deployment pipeline, FastAPI services, Next.js frontend integration, and contributed extensively to data preprocessing and machine learning pipeline development |
-| **Safwan Marwat** | Data collection, exploration, and analysis |
-| **Syed Mughees** | Preprocessing pipelines and feature engineering |
-| **Ifrahim Yousuf** | Model training, evaluation, and experimentation |
+| Name | Role |
+|------|------|
+| **M. Khizar Akram** | Team Lead — Architecture, FastAPI, Next.js, Deployment |
+| **Safwan Marwat** | Data Collection & Exploration |
+| **Syed Mughees** | Preprocessing & Feature Engineering |
+| **Ifrahim Yousuf** | Model Training & Evaluation |
 
-[![Khizar](https://img.shields.io/badge/Khizar-Akram-blue?style=flat-square)](https://github.com/Khizar525)
+[![GitHub](https://img.shields.io/badge/GitHub-Khizar525-181717.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Khizar525)
 
 </div>
