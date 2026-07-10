@@ -11,7 +11,7 @@
 [![Optuna](https://img.shields.io/badge/Optuna-3.4+-9B59B6.svg?style=for-the-badge&logo=optuna&logoColor=white)](https://optuna.org/)
 [![Gradio](https://img.shields.io/badge/Gradio-4.0+-FF5722.svg?style=for-the-badge&logo=gradio&logoColor=white)](https://www.gradio.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-53%20passing-brightgreen.svg?style=for-the-badge)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-62%20passing-brightgreen.svg?style=for-the-badge)](#testing)
 
 <br>
 
@@ -38,10 +38,11 @@ The system compares **four classifiers** — Random Forest, SVM, XGBoost, and ML
 | **SHAP Explainability** | Global feature importance + per-prediction waterfall plots |
 | **Risk Engineering** | Composite scoring → 3-class academic risk levels |
 | **Live Dashboard** | Modern Gradio UI with risk gauge, probability charts, analytics |
+| **REST API** | FastAPI service with /predict, /health, /model/info endpoints |
 | **Prediction Logging** | Timestamped CSV with analytics and export |
 | **Error Analysis** | Misclassification patterns and feature comparison |
 | **Reproducible Pipeline** | No data leakage, fixed random seeds, saved artifacts |
-| **53 Unit Tests** | Comprehensive test coverage across all modules |
+| **62 Unit Tests** | Comprehensive test coverage across all modules |
 
 ---
 
@@ -223,23 +224,41 @@ flowchart TD
 
 ## Results
 
-> Run `python -m src.training.trainer` to generate actual results.
-
-| Model | Accuracy | ROC-AUC | 5-Fold CV |
+| Model | Accuracy | ROC-AUC | 3-Fold CV |
 |-------|----------|---------|-----------|
-| Random Forest | ~0.87 | ~0.93 | ~0.85 |
-| XGBoost | ~0.86 | ~0.92 | ~0.84 |
-| SVM | ~0.82 | ~0.88 | ~0.80 |
-| MLP | ~0.80 | ~0.86 | ~0.78 |
+| **Random Forest** | **85.58%** | **94.92%** | 85.27 ± 0.39% |
+| XGBoost | 85.24% | 95.02% | 85.88 ± 0.27% |
+| MLP | 85.18% | 94.69% | 84.66 ± 0.46% |
+| SVM | 82.12% | 93.10% | 82.40 ± 0.19% |
+
+**Best Model:** Random Forest — 85.58% accuracy, 94.92% ROC-AUC
+
+### Per-Class Performance (Random Forest)
+
+| Class | Precision | Recall | F1-Score |
+|-------|-----------|--------|----------|
+| Low Risk | 0.87 | 0.88 | 0.88 |
+| Medium Risk | 0.70 | 0.59 | 0.64 |
+| High Risk | 0.91 | 0.97 | 0.94 |
+
+> See [docs/results.md](docs/results.md) for detailed analysis and visualizations.
+> See [MODEL_CARD.md](MODEL_CARD.md) for model documentation.
 
 ---
 
 ## Deployment
 
-### Local
+### Local — Gradio Dashboard
 
 ```bash
 python -m app.main
+```
+
+### Local — FastAPI REST API
+
+```bash
+uvicorn app.api:app --host 0.0.0.0 --port 8000
+# API docs: http://localhost:8000/docs
 ```
 
 ### Docker
@@ -265,12 +284,13 @@ python -m pytest tests/ -v
 python -m pytest tests/ -v --cov=src --cov-report=html
 ```
 
-**53 tests** covering:
+**62 tests** covering:
 - Preprocessing (imputation, encoding, scaling)
 - Training (model configs, Optuna, GridSearchCV)
 - Evaluation (metrics, error analysis, plots)
 - SHAP (helpers, local explanations, plots)
 - Inference (validation, prediction, logging)
+- API (FastAPI endpoints, request validation)
 
 ---
 
@@ -279,6 +299,7 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [Architecture Guide](docs/architecture.md) — System design with Mermaid diagrams
 - [ML Methodology](docs/methodology.md) — Pipeline, feature selection, model details
 - [Results & Metrics](docs/results.md) — Performance analysis and error patterns
+- [Model Card](MODEL_CARD.md) — Model details, performance, and usage
 
 ---
 
@@ -304,8 +325,8 @@ TRAINING.optuna_n_trials = 50
 - [x] Error analysis module
 - [x] SHAP waterfall plots and human-readable interpretations
 - [x] Modern dashboard with analytics and export
+- [x] FastAPI REST API alongside Gradio
 - [ ] MLflow experiment tracking
-- [ ] FastAPI REST API alongside Gradio
 - [ ] PostgreSQL prediction logging
 - [ ] A/B testing framework
 - [ ] Student dashboard with historical trends
