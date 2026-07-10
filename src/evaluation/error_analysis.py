@@ -51,9 +51,11 @@ def analyze_errors(
 
     # Confusion pairs — most common misclassifications
     confusion_pairs = []
+    y_test_arr = y_test.values if hasattr(y_test, "values") else y_test
+    y_pred_arr = y_pred.values if hasattr(y_pred, "values") else y_pred
     for idx in misclassified_idx:
-        true_cls = int(y_test[idx])
-        pred_cls = int(y_pred[idx])
+        true_cls = int(y_test_arr[idx])
+        pred_cls = int(y_pred_arr[idx])
         confusion_pairs.append((RISK_LABELS[true_cls], RISK_LABELS[pred_cls]))
 
     # Count confusion pairs

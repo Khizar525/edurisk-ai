@@ -1,49 +1,108 @@
 # Results
 
+## Dataset Summary
+
+| Metric | Value |
+|--------|-------|
+| Total samples | 27,901 |
+| Features | 11 (after selection) |
+| Train/Test split | 22,320 / 5,581 (80/20 stratified) |
+| Target classes | 3 (Low Risk, Medium Risk, High Risk) |
+| Class balance | Low: 37.5%, Medium: 21.8%, High: 40.7% |
+| Missing values | 3 (Financial Stress only) |
+
 ## Model Performance
 
-> Run `python -m src.training.trainer` to generate actual results.
+| Model | Accuracy | ROC-AUC | 3-Fold CV | CV Std |
+|-------|----------|---------|-----------|--------|
+| **Random Forest** | **0.8558** | **0.9492** | 0.8527 | 0.0039 |
+| XGBoost | 0.8524 | 0.9502 | 0.8588 | 0.0027 |
+| MLP | 0.8518 | 0.9469 | 0.8466 | 0.0046 |
+| SVM | 0.8212 | 0.9310 | 0.8240 | 0.0019 |
 
-### Expected Performance
+**Best Model:** Random Forest (Accuracy: 85.58%, ROC-AUC: 94.92%)
 
-Based on the original notebook and dataset characteristics:
+### Per-Class Classification Report (Best Model — Random Forest)
 
-| Model | Accuracy | ROC-AUC | 5-Fold CV | Notes |
-|-------|----------|---------|-----------|-------|
-| Random Forest | ~0.85-0.90 | ~0.90-0.95 | ~0.83-0.88 | Best performer (tree-based) |
-| XGBoost | ~0.84-0.89 | ~0.89-0.94 | ~0.82-0.87 | Strong gradient boosting |
-| SVM | ~0.80-0.85 | ~0.85-0.90 | ~0.78-0.83 | Good baseline |
-| MLP | ~0.78-0.83 | ~0.83-0.88 | ~0.76-0.81 | Neural network baseline |
+| Class | Precision | Recall | F1-Score | Support |
+|-------|-----------|--------|----------|---------|
+| Low Risk | 0.87 | 0.88 | 0.88 | 2,090 |
+| Medium Risk | 0.70 | 0.59 | 0.64 | 1,219 |
+| High Risk | 0.91 | 0.97 | 0.94 | 2,272 |
+| **Weighted Avg** | **0.85** | **0.86** | **0.85** | **5,581** |
+
+### Tuned Hyperparameters
+
+| Model | Best Parameters |
+|-------|----------------|
+| Random Forest | `max_depth=15, min_samples_split=5, n_estimators=100` |
+| XGBoost | `learning_rate=0.1, max_depth=4, n_estimators=200` |
+| SVM | Default (RBF kernel, probability=True) |
+| MLP | Default (64, 32) hidden layers, early stopping |
+
+## Error Analysis
+
+### Error Rate by Class (Random Forest)
+
+| Class | Total | Errors | Error Rate |
+|-------|-------|--------|------------|
+| Low Risk | 2,090 | 249 | 11.9% |
+| Medium Risk | 1,219 | 498 | 40.9% |
+| High Risk | 2,272 | 58 | 2.6% |
+
+### Top Confusion Pairs
+
+1. **Medium Risk → Low Risk**: 274 times (borderline cases with protective factors)
+2. **Low Risk → Medium Risk**: 249 times (students with some risk indicators)
+3. **Medium Risk → High Risk**: 224 times (missing suicidal thoughts signal)
+4. **High Risk → Medium Risk**: 57 times (high CGPA offsetting risk factors)
 
 ### Key Findings
 
-1. **Academic Pressure** is consistently the strongest predictor across all models
-2. **CGPA** serves as both a risk factor (when low) and protective factor (when high)
-3. **Suicidal thoughts** has the highest individual contribution to high-risk predictions
-4. **Sleep duration** and **financial stress** are secondary but significant contributors
-5. **Random Forest** typically outperforms other models due to feature interaction handling
+1. **Medium Risk** is the hardest class to predict (40.9% error rate) due to overlap with adjacent classes
+2. **High Risk** is the easiest to predict (2.6% error rate) — clear signal from suicidal thoughts + academic pressure
+3. **Academic Pressure** is consistently the strongest predictor across all models
+4. **CGPA** serves as both a risk factor (when low) and protective factor (when high)
+5. **Suicidal thoughts** has the highest individual contribution to high-risk predictions
 
 ## Visualizations
 
 ### Confusion Matrices
 
-> Generated after training. Shows classification accuracy per risk level.
+![Random Forest](../assets/results/cm_Random_Forest.png)
+![XGBoost](../assets/results/cm_XGBoost.png)
+![SVM](../assets/results/cm_SVM.png)
+![MLP](../assets/results/cm_MLP.png)
 
 ### ROC Curves
 
-> One-vs-Rest ROC curves for each model. Area under curve indicates discriminative ability.
+![ROC Curves](../assets/results/roc_curves.png)
+
+### Precision-Recall Curves
+
+![PR Curves](../assets/results/pr_curves.png)
+
+### Calibration Curves
+
+![Calibration](../assets/results/calibration_curves.png)
+
+### Learning Curves
+
+![Learning Curves](../assets/results/learning_curves.png)
+
+### Model Comparison
+
+![Model Comparison](../assets/results/model_comparison.png)
+![Radar Chart](../assets/results/model_radar.png)
 
 ### SHAP Feature Importance
 
-> Global feature importance showing which features most influence predictions.
+![SHAP Bar](../assets/results/shap_bar_rf.png)
+![SHAP Beeswarm](../assets/results/shap_beeswarm_rf.png)
 
-### Error Analysis
+### Class Distribution
 
-| Metric | Value |
-|--------|-------|
-| Most common error | Medium Risk → Low Risk |
-| Hardest class to predict | Medium Risk (overlap with adjacent classes) |
-| Error rate by class | Low: ~3%, Medium: ~20%, High: ~20% |
+![Class Distribution](../assets/results/class_distribution.png)
 
 ## Error Patterns
 
@@ -69,8 +128,10 @@ graph LR
 
 ## Reproducibility
 
-- Random seed: `42` (all splits, models, and CV)
-- Train/test split: 80/20 stratified
-- Cross-validation: 5-fold stratified
-- Model artifacts saved as pickle files
-- Preprocessing artifacts (scaler, encoders) saved for inference
+- **Random seed:** `42` (all splits, models, and CV)
+- **Train/test split:** 80/20 stratified
+- **Cross-validation:** 3-fold stratified
+- **Scaler:** StandardScaler fit on training data only (no leakage)
+- **Encoders:** LabelEncoder fit on full data (deterministic, safe for risk engineering)
+- **Model artifacts:** Saved as pickle files in `models/`
+- **Figures:** Saved to `assets/results/` (13 PNG files)

@@ -95,20 +95,20 @@ class TrainingConfig:
     """Model training configuration."""
     test_size: float = 0.2
     random_state: int = 42
-    cv_folds: int = 5
+    cv_folds: int = 3
     scoring: str = "accuracy"
 
-    # Random Forest grid
+    # Random Forest grid (reduced for speed on 27K dataset)
     rf_param_grid: Dict[str, Any] = field(default_factory=lambda: {
         "n_estimators": [100, 200],
-        "max_depth": [None, 10, 20],
+        "max_depth": [None, 15],
         "min_samples_split": [2, 5],
     })
 
-    # XGBoost grid
+    # XGBoost grid (reduced for speed on 27K dataset)
     xgb_param_grid: Dict[str, Any] = field(default_factory=lambda: {
         "n_estimators": [100, 200],
-        "max_depth": [3, 6],
+        "max_depth": [4, 6],
         "learning_rate": [0.05, 0.1],
     })
 
