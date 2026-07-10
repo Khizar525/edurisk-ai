@@ -5,6 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    container_name: edurisk-ai
     ports:
       - "7860:7860"
     volumes:
@@ -12,4 +13,11 @@ services:
       - ../data:/app/data
     environment:
       - PYTHONUNBUFFERED=1
+      - EDURISK_LOG_LEVEL=INFO
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

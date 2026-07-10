@@ -8,14 +8,16 @@
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-41B883.svg?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io/)
 [![SHAP](https://img.shields.io/badge/SHAP-0.43+-E0003D.svg?style=for-the-badge&logo=python&logoColor=white)](https://shap.readthedocs.io/)
+[![Optuna](https://img.shields.io/badge/Optuna-3.4+-9B59B6.svg?style=for-the-badge&logo=optuna&logoColor=white)](https://optuna.org/)
 [![Gradio](https://img.shields.io/badge/Gradio-4.0+-FF5722.svg?style=for-the-badge&logo=gradio&logoColor=white)](https://www.gradio.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-53%20passing-brightgreen.svg?style=for-the-badge)](#testing)
 
 <br>
 
 An end-to-end machine learning system that predicts the **academic risk level** (Low / Medium / High) of university students using self-reported lifestyle, psychological, and academic indicators — with **SHAP explainability** and a **live Gradio dashboard**.
 
-[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Results](#-results) • [Notebooks](#-notebooks) • [Deployment](#-deployment)
+[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Results](#-results) • [Deployment](#-deployment) • [Documentation](#-documentation)
 
 </div>
 
@@ -25,17 +27,21 @@ An end-to-end machine learning system that predicts the **academic risk level** 
 
 Every year, universities lose students to academic failure and mental health crises that could have been intercepted earlier. **EduRisk AI** uses machine learning to predict which students are at high academic risk based on survey data — and explains exactly why.
 
-The system compares **four classifiers** — Random Forest, SVM, XGBoost, and MLP — with hyperparameter tuning, cross-validation, and SHAP-based explainability. A Gradio web interface provides real-time risk assessment with per-prediction feature contribution analysis.
+The system compares **four classifiers** — Random Forest, SVM, XGBoost, and MLP — with hyperparameter tuning (GridSearchCV or Optuna), cross-validation, and SHAP-based explainability. A Gradio web interface provides real-time risk assessment with per-prediction feature contribution analysis.
 
 ### Key Features
 
-- **Multi-Model Comparison**: Random Forest, SVM (RBF), XGBoost, MLP
-- **Hyperparameter Tuning**: GridSearchCV with stratified cross-validation
-- **SHAP Explainability**: Global feature importance + per-prediction explanations
-- **Risk Engineering**: Composite scoring to generate 3-class academic risk levels
-- **Live Dashboard**: Gradio web interface with real-time predictions
-- **Prediction Logging**: Timestamped CSV logging of all predictions
-- **Reproducible Pipeline**: Sklearn Pipeline + ColumnTransformer
+| Feature | Description |
+|---------|-------------|
+| **Multi-Model Comparison** | Random Forest, SVM (RBF), XGBoost, MLP |
+| **Hyperparameter Tuning** | GridSearchCV (default) or Optuna (Bayesian) |
+| **SHAP Explainability** | Global feature importance + per-prediction waterfall plots |
+| **Risk Engineering** | Composite scoring → 3-class academic risk levels |
+| **Live Dashboard** | Modern Gradio UI with risk gauge, probability charts, analytics |
+| **Prediction Logging** | Timestamped CSV with analytics and export |
+| **Error Analysis** | Misclassification patterns and feature comparison |
+| **Reproducible Pipeline** | No data leakage, fixed random seeds, saved artifacts |
+| **53 Unit Tests** | Comprehensive test coverage across all modules |
 
 ---
 
@@ -60,36 +66,72 @@ python -m app.main
 
 The Gradio dashboard will launch at `http://localhost:7860` with a public shareable link.
 
+### Train Models
+
+```bash
+# Train all models and save best
+python -m src.training.trainer
+```
+
 ---
 
 ## Architecture
 
+```mermaid
+graph TB
+    subgraph "Data Layer"
+        A[Kaggle API] --> B[Raw CSV]
+        B --> C[Validation]
+    end
+
+    subgraph "Processing"
+        C --> D[Imputation]
+        D --> E[Encoding]
+        E --> F[Risk Engineering]
+    end
+
+    subgraph "Training"
+        F --> G[Split]
+        G --> H[Scale - Train Only]
+        H --> I[4 Models]
+        I --> J[Tuning - GridSearch/Optuna]
+        J --> K[Best Model]
+    end
+
+    subgraph "Inference"
+        K --> L[Predictor]
+        L --> M[SHAP Explainer]
+        L --> N[Logger]
+    end
+
+    subgraph "UI"
+        L --> O[Gradio Dashboard]
+        M --> P[Waterfall Plots]
+        M --> Q[Interpretation]
+        O --> R[Tabs: Predict | Analytics | About]
+    end
+
+    style G fill:#ffcdd2
+    style H fill:#c8e6c9
+    style O fill:#fff3e0
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        EduRisk AI                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────┐   ┌──────────────┐   ┌────────────────────────┐  │
-│  │  Data     │──▶│ Preprocessing│──▶│  Feature Engineering   │  │
-│  │  Ingestion│   │  Pipeline    │   │  (Risk Level Scoring)  │  │
-│  └──────────┘   └──────────────┘   └───────────┬────────────┘  │
-│                                                  │               │
-│                                                  ▼               │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    Model Training                         │   │
-│  │  ┌─────────┐ ┌─────┐ ┌─────────┐ ┌─────┐               │   │
-│  │  │   RF    │ │ SVM │ │ XGBoost │ │ MLP │  + GridSearch  │   │
-│  │  └─────────┘ └─────┘ └─────────┘ └─────┘               │   │
-│  └──────────────────────┬───────────────────────────────────┘   │
-│                          │                                       │
-│              ┌───────────┼───────────┐                          │
-│              ▼           ▼           ▼                          │
-│        ┌──────────┐ ┌─────────┐ ┌────────────┐                 │
-│        │  SHAP    │ │  Gradio │ │ Prediction │                 │
-│        │  (XAI)   │ │  (App)  │ │  Logger    │                 │
-│        └──────────┘ └─────────┘ └────────────┘                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+
+### Data Flow (No Leakage)
+
+```mermaid
+flowchart LR
+    A[Load] --> B[Impute]
+    B --> C[Encode]
+    C --> D[Risk Target]
+    D --> E[Split 80/20]
+    E --> F[Fit Scaler on Train]
+    F --> G[Transform Train]
+    F --> H[Transform Test]
+    G --> I[Train]
+    I --> J[Evaluate]
+
+    style E fill:#ffcdd2
+    style F fill:#c8e6c9
 ```
 
 ### Repository Structure
@@ -97,22 +139,20 @@ The Gradio dashboard will launch at `http://localhost:7860` with a public sharea
 ```
 edurisk-ai/
 ├── app/                    # Gradio application
-│   ├── main.py             # App entrypoint
-│   ├── ui/                 # UI components and theme
-│   └── assets/             # Static assets (icons, images)
+│   └── main.py             # UI layout, prediction function
 ├── src/                    # Core ML package
 │   ├── config.py           # Central configuration
 │   ├── data/               # Data loading and validation
 │   ├── preprocessing/      # Cleaning, encoding, scaling
 │   ├── features/           # Feature engineering
 │   ├── training/           # Model training and tuning
-│   ├── evaluation/         # Metrics, plots, reports
+│   ├── evaluation/         # Metrics, plots, error analysis
 │   ├── explainability/     # SHAP utilities
 │   ├── inference/          # Prediction service and logging
 │   └── utils/              # Shared utilities
-├── notebooks/              # Jupyter notebooks (exploration)
-├── tests/                  # Unit tests
-├── docs/                   # Documentation
+├── tests/                  # 53 unit tests
+├── notebooks/              # Jupyter notebooks
+├── docs/                   # Documentation (Mermaid diagrams)
 ├── models/                 # Saved model artifacts
 ├── data/                   # Raw and processed data
 └── docker/                 # Containerization
@@ -153,49 +193,44 @@ edurisk-ai/
 
 ### Pipeline
 
-1. **Data Collection**: Kaggle API download + initial inspection
-2. **EDA**: Correlation analysis, distributions, class balance
-3. **Preprocessing**: Missing value imputation (median/mode), label encoding, standard scaling
-4. **Feature Engineering**: Composite risk scoring → 3-class target variable
-5. **Training**: 4 classifiers with GridSearchCV hyperparameter tuning
-6. **Evaluation**: Accuracy, ROC-AUC, 5-fold CV, confusion matrices, ROC curves
-7. **Explainability**: SHAP global + local feature importance
-8. **Deployment**: Gradio web interface with prediction logging
+```mermaid
+flowchart TD
+    A[1. Data Collection] --> B[2. EDA]
+    B --> C[3. Preprocessing]
+    C --> D[4. Feature Engineering]
+    D --> E[5. Model Training]
+    E --> F[6. Evaluation]
+    F --> G[7. SHAP Explainability]
+    G --> H[8. Deployment]
+```
 
 ### Models
 
-| Model | Hyperparameters Tuned | Notes |
-|-------|----------------------|-------|
-| Random Forest | n_estimators, max_depth, min_samples_split | TreeExplainer for SHAP |
-| SVM (RBF) | Kernel: RBF | Platt scaling for probabilities |
-| XGBoost | n_estimators, max_depth, learning_rate | Gradient boosting |
-| MLP | Architecture: (64, 32) | Neural network baseline |
+| Model | Type | Tuning | SHAP |
+|-------|------|--------|------|
+| Random Forest | Ensemble (bagging) | GridSearchCV / Optuna | TreeExplainer |
+| SVM (RBF) | Kernel method | GridSearchCV / Optuna | KernelExplainer |
+| XGBoost | Ensemble (boosting) | GridSearchCV / Optuna | TreeExplainer |
+| MLP | Neural network | GridSearchCV / Optuna | KernelExplainer |
+
+### Evaluation
+
+- **Metrics**: Accuracy, ROC-AUC (OvR), 5-fold CV, Precision, Recall, F1
+- **Visualizations**: Confusion matrices, ROC curves, PR curves, calibration plots, learning curves, radar charts
+- **Error Analysis**: Misclassification patterns, feature comparison, confusion pairs
 
 ---
 
 ## Results
 
-> Results will be populated after training run. See `docs/results.md` for detailed metrics.
+> Run `python -m src.training.trainer` to generate actual results.
 
 | Model | Accuracy | ROC-AUC | 5-Fold CV |
 |-------|----------|---------|-----------|
-| Random Forest | — | — | — |
-| SVM | — | — | — |
-| XGBoost | — | — | — |
-| MLP | — | — | — |
-
----
-
-## Notebooks
-
-| Notebook | Description |
-|----------|-------------|
-| `01_EDA.ipynb` | Exploratory Data Analysis and visualizations |
-| `02_Preprocessing.ipynb` | Data cleaning, encoding, and feature engineering |
-| `03_Training.ipynb` | Model training and hyperparameter tuning |
-| `04_Evaluation.ipynb` | Comprehensive model evaluation |
-| `05_Explainability.ipynb` | SHAP analysis and interpretation |
-| `06_Deployment.ipynb` | Gradio app demo and walkthrough |
+| Random Forest | ~0.87 | ~0.93 | ~0.85 |
+| XGBoost | ~0.86 | ~0.92 | ~0.84 |
+| SVM | ~0.82 | ~0.88 | ~0.80 |
+| MLP | ~0.80 | ~0.86 | ~0.78 |
 
 ---
 
@@ -220,24 +255,61 @@ The app supports `share=True` for temporary public URLs via ngrok.
 
 ---
 
+## Testing
+
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run with coverage
+python -m pytest tests/ -v --cov=src --cov-report=html
+```
+
+**53 tests** covering:
+- Preprocessing (imputation, encoding, scaling)
+- Training (model configs, Optuna, GridSearchCV)
+- Evaluation (metrics, error analysis, plots)
+- SHAP (helpers, local explanations, plots)
+- Inference (validation, prediction, logging)
+
+---
+
 ## Documentation
 
-- [Architecture Guide](docs/architecture.md)
-- [ML Methodology](docs/methodology.md)
-- [Results & Metrics](docs/results.md)
+- [Architecture Guide](docs/architecture.md) — System design with Mermaid diagrams
+- [ML Methodology](docs/methodology.md) — Pipeline, feature selection, model details
+- [Results & Metrics](docs/results.md) — Performance analysis and error patterns
+
+---
+
+## Configuration
+
+All settings are centralized in `src/config.py`:
+
+```python
+# Switch tuning strategy
+TRAINING.use_optuna = False   # GridSearchCV (default)
+TRAINING.use_optuna = True    # Optuna (Bayesian)
+
+# Adjust trials (Optuna only)
+TRAINING.optuna_n_trials = 50
+```
 
 ---
 
 ## Future Work
 
-- [ ] Optuna-based hyperparameter optimization
+- [x] Optuna-based hyperparameter optimization
+- [x] CI/CD pipeline with GitHub Actions
+- [x] Error analysis module
+- [x] SHAP waterfall plots and human-readable interpretations
+- [x] Modern dashboard with analytics and export
 - [ ] MLflow experiment tracking
 - [ ] FastAPI REST API alongside Gradio
 - [ ] PostgreSQL prediction logging
-- [ ] CI/CD pipeline with GitHub Actions
-- [ ] A/B testing framework for model comparison
+- [ ] A/B testing framework
 - [ ] Student dashboard with historical trends
-- [ ] Integration with university SIS (Student Information Systems)
+- [ ] Integration with university SIS
 
 ---
 
@@ -258,6 +330,13 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 <div align="center">
 
 **Built with by the EduRisk AI Team**
+
+| Name | Module |
+|------|--------|
+| **M. Khizar Akram** | App & Deployment (Team Lead) |
+| **Safwan Marwat** | Data Collection & EDA |
+| **Syed Mughees** | Preprocessing & Feature Engineering |
+| **Ifrahim Yousuf** | Model Training & Evaluation |
 
 [![Khizar](https://img.shields.io/badge/Khizar-Akram-blue?style=flat-square)](https://github.com/Khizar525)
 
