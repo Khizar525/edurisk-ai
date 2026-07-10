@@ -11,6 +11,12 @@
 | Class balance | Low: 37.5%, Medium: 21.8%, High: 40.7% |
 | Missing values | 3 (Financial Stress only) |
 
+## Class Distribution
+
+![Class Distribution](../assets/images/class-distribution.png)
+
+![Risk Breakdown](../assets/images/risk-breakdown.png)
+
 ## Model Performance
 
 | Model | Accuracy | ROC-AUC | 3-Fold CV | CV Std |
@@ -22,6 +28,8 @@
 
 **Best Model:** Random Forest (Accuracy: 85.58%, ROC-AUC: 94.92%)
 
+![Model Comparison](../assets/images/model-comparison.png)
+
 ### Per-Class Classification Report (Best Model — Random Forest)
 
 | Class | Precision | Recall | F1-Score | Support |
@@ -31,6 +39,8 @@
 | High Risk | 0.91 | 0.97 | 0.94 | 2,272 |
 | **Weighted Avg** | **0.85** | **0.86** | **0.85** | **5,581** |
 
+![Per-Class Metrics](../assets/images/per-class-metrics.png)
+
 ### Tuned Hyperparameters
 
 | Model | Best Parameters |
@@ -39,6 +49,10 @@
 | XGBoost | `learning_rate=0.1, max_depth=4, n_estimators=200` |
 | SVM | Default (RBF kernel, probability=True) |
 | MLP | Default (64, 32) hidden layers, early stopping |
+
+## Confusion Matrix
+
+![Confusion Matrix](../assets/images/confusion-matrix.png)
 
 ## Error Analysis
 
@@ -57,6 +71,19 @@
 3. **Medium Risk → High Risk**: 224 times (missing suicidal thoughts signal)
 4. **High Risk → Medium Risk**: 57 times (high CGPA offsetting risk factors)
 
+```mermaid
+graph LR
+    A[True Low] -->|Misclassified| B[Predicted Medium]
+    C[True Medium] -->|Misclassified| D[Predicted Low]
+    C -->|Misclassified| E[Predicted High]
+    F[True High] -->|Misclassified| G[Predicted Medium]
+
+    style B fill:#fff3cd
+    style D fill:#fff3cd
+    style E fill:#f8d7da
+    style G fill:#f8d7da
+```
+
 ### Key Findings
 
 1. **Medium Risk** is the hardest class to predict (40.9% error rate) due to overlap with adjacent classes
@@ -65,66 +92,9 @@
 4. **CGPA** serves as both a risk factor (when low) and protective factor (when high)
 5. **Suicidal thoughts** has the highest individual contribution to high-risk predictions
 
-## Visualizations
+## SHAP Feature Importance
 
-### Confusion Matrices
-
-![Random Forest](../assets/results/cm_Random_Forest.png)
-![XGBoost](../assets/results/cm_XGBoost.png)
-![SVM](../assets/results/cm_SVM.png)
-![MLP](../assets/results/cm_MLP.png)
-
-### ROC Curves
-
-![ROC Curves](../assets/results/roc_curves.png)
-
-### Precision-Recall Curves
-
-![PR Curves](../assets/results/pr_curves.png)
-
-### Calibration Curves
-
-![Calibration](../assets/results/calibration_curves.png)
-
-### Learning Curves
-
-![Learning Curves](../assets/results/learning_curves.png)
-
-### Model Comparison
-
-![Model Comparison](../assets/results/model_comparison.png)
-![Radar Chart](../assets/results/model_radar.png)
-
-### SHAP Feature Importance
-
-![SHAP Bar](../assets/results/shap_bar_rf.png)
-![SHAP Beeswarm](../assets/results/shap_beeswarm_rf.png)
-
-### Class Distribution
-
-![Class Distribution](../assets/results/class_distribution.png)
-
-## Error Patterns
-
-```mermaid
-graph LR
-    A[True: Low] -->|Misclassified| B[Predicted: Medium]
-    C[True: Medium] -->|Misclassified| D[Predicted: Low]
-    C -->|Misclassified| E[Predicted: High]
-    F[True: High] -->|Misclassified| G[Predicted: Medium]
-    
-    style B fill:#fff3cd
-    style D fill:#fff3cd
-    style E fill:#f8d7da
-    style G fill:#f8d7da
-```
-
-### Common Misclassification Patterns
-
-1. **Low → Medium**: Students with borderline CGPA (2.0-2.5) and moderate academic pressure
-2. **Medium → Low**: Students with protective factors (high CGPA) masking risk factors
-3. **Medium → High**: Students with suicidal thoughts but other protective factors
-4. **High → Medium**: Students with high CGPA offsetting other risk factors
+![SHAP Feature Importance](../assets/images/shap-importance.png)
 
 ## Reproducibility
 
@@ -134,4 +104,3 @@ graph LR
 - **Scaler:** StandardScaler fit on training data only (no leakage)
 - **Encoders:** LabelEncoder fit on full data (deterministic, safe for risk engineering)
 - **Model artifacts:** Saved as pickle files in `models/`
-- **Figures:** Saved to `assets/results/` (13 PNG files)

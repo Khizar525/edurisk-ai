@@ -233,6 +233,8 @@ flowchart TD
 
 **Best Model:** Random Forest — 85.58% accuracy, 94.92% ROC-AUC
 
+![Model Comparison](assets/images/model-comparison.png)
+
 ### Per-Class Performance (Random Forest)
 
 | Class | Precision | Recall | F1-Score |
@@ -240,6 +242,9 @@ flowchart TD
 | Low Risk | 0.87 | 0.88 | 0.88 |
 | Medium Risk | 0.70 | 0.59 | 0.64 |
 | High Risk | 0.91 | 0.97 | 0.94 |
+
+![Confusion Matrix](assets/images/confusion-matrix.png)
+![Per-Class Metrics](assets/images/per-class-metrics.png)
 
 > See [docs/results.md](docs/results.md) for detailed analysis and visualizations.
 > See [MODEL_CARD.md](MODEL_CARD.md) for model documentation.
