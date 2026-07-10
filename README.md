@@ -43,20 +43,14 @@ The project emphasizes **engineering quality** as much as predictive performance
 
 ## Tech Stack
 
-```
-Frontend          Backend           Machine Learning
-─────────────     ─────────────     ─────────────────
-Next.js           FastAPI           Scikit-learn
-Tailwind CSS      Gradio            XGBoost
-TypeScript        Uvicorn           Optuna
-Framer Motion                       SHAP
-
-Data              DevOps            Testing
-─────────────     ─────────────     ─────────────────
-Pandas            Docker            Pytest
-NumPy             GitHub Actions    Coverage
-Kaggle API
-```
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | Next.js, TypeScript, Tailwind CSS, Framer Motion |
+| **Backend** | FastAPI, Gradio, Uvicorn |
+| **Machine Learning** | Scikit-learn, XGBoost, Optuna, SHAP |
+| **Data** | Pandas, NumPy, Kaggle API |
+| **DevOps** | Docker, GitHub Actions |
+| **Testing** | Pytest, Coverage |
 
 ---
 
@@ -65,6 +59,19 @@ Kaggle API
 Every year, universities lose students to academic failure and mental health crises that could have been intercepted earlier. **EduRisk AI** uses machine learning to predict which students are at high academic risk based on survey data — and explains exactly why.
 
 The system compares **four classifiers** — Random Forest, SVM, XGBoost, and MLP — with hyperparameter tuning (GridSearchCV or Optuna), cross-validation, and SHAP-based explainability. The same prediction engine serves three interfaces: a Next.js web app, a FastAPI REST API, and a Gradio dashboard.
+
+### Project Statistics
+
+| Metric | Value |
+|--------|-------|
+| Dataset Size | 27,901 students |
+| Features Used | 11 |
+| Models Evaluated | 4 |
+| Best Accuracy | 85.58% |
+| Best ROC-AUC | 94.92% |
+| Unit Tests | 62 |
+| Frontends | 2 (Next.js + Gradio) |
+| REST API Endpoints | 3 |
 
 ### Capabilities
 
@@ -104,19 +111,48 @@ venv\Scripts\activate      # Windows
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Run the application
-python -m app.main
 ```
 
-The Gradio dashboard will launch at `http://localhost:7860` with a public shareable link.
+### Launch the Application
 
-### Train Models
+**1. Start the FastAPI backend**
+
+```bash
+uvicorn app.api:app --host 0.0.0.0 --port 8000
+# API docs: http://localhost:8000/docs
+```
+
+**2. Start the Next.js frontend**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+> The Gradio interface remains available as an alternative demonstration interface via `python -m app.main`.
+
+### Model Training
 
 ```bash
 # Train all models and save best
 python -m src.training.trainer
 ```
+
+---
+
+## Live Demo
+
+🚧 **Coming Soon**
+
+| Interface | Platform |
+|-----------|----------|
+| Frontend (Next.js) | Vercel |
+| REST API (FastAPI) | Render |
+| Swagger Docs | Render |
+| Docker Deployment | Docker Hub |
 
 ---
 
@@ -259,6 +295,13 @@ edurisk-ai/
 | Family History | Categorical | Family history of mental illness |
 | Suicidal Thoughts | Categorical | History of suicidal ideation |
 
+### Limitations
+
+- **Self-reported data**: All features rely on student self-assessment, which may introduce response bias
+- **Survey bias**: The dataset was collected via online surveys, potentially over-representing certain demographics
+- **Demographic limitations**: The dataset may not generalize across all university populations, cultural contexts, or educational systems
+- **Temporal snapshot**: Data represents a single point in time rather than longitudinal tracking
+
 ---
 
 ## Methodology
@@ -301,6 +344,8 @@ flowchart TD
 > - ROC-AUC: **94.92%**
 > - Cross-validation: **85.27 ± 0.39%**
 > - Selected for deployment due to its balance of predictive performance and interpretability.
+
+Although XGBoost achieved a slightly higher ROC-AUC (95.02%), Random Forest was selected because it provided the best balance between overall accuracy, calibration, inference speed, and SHAP interpretability. TreeExplainer on Random Forest produces exact, consistent feature attributions — critical for a system that must explain its predictions to non-technical stakeholders.
 
 | Model | Accuracy | ROC-AUC | 3-Fold CV |
 |-------|----------|---------|-----------|
@@ -364,6 +409,41 @@ The app supports `share=True` for temporary public URLs via ngrok.
 
 ---
 
+## Configuration
+
+All settings are centralized in `src/config.py`:
+
+```python
+# Switch tuning strategy
+TRAINING.use_optuna = False   # GridSearchCV (default)
+TRAINING.use_optuna = True    # Optuna (Bayesian)
+
+# Adjust trials (Optuna only)
+TRAINING.optuna_n_trials = 50
+```
+
+---
+
+## Design Decisions
+
+### Why FastAPI over Flask?
+
+FastAPI provides automatic OpenAPI/Swagger documentation, native async support, and Pydantic request validation — eliminating boilerplate and making the API self-documenting for frontend integration.
+
+### Why SHAP over LIME or Permutation Importance?
+
+SHAP provides both global feature importance and per-prediction explanations with mathematical guarantees (Shapley values). TreeExplainer on tree models gives exact attributions in polynomial time, making it production-viable.
+
+### Why Next.js over React + Vite?
+
+Next.js provides server-side rendering, file-based routing, and a mature ecosystem for deployment on Vercel. TypeScript integration and Tailwind CSS made building the dark-mode UI fast and maintainable.
+
+### Why keep Gradio alongside Next.js?
+
+Gradio serves as a rapid prototyping and demonstration interface that requires zero frontend setup. It's ideal for instructor demos, quick testing, and as a fallback when the Next.js frontend isn't running.
+
+---
+
 ## Testing
 
 ```bash
@@ -386,25 +466,10 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 
 ## Documentation
 
-- [Architecture Guide](docs/architecture.md) — System design with Mermaid diagrams
-- [ML Methodology](docs/methodology.md) — Pipeline, feature selection, model details
-- [Results & Metrics](docs/results.md) — Performance analysis and error patterns
-- [Model Card](MODEL_CARD.md) — Model details, performance, and usage
-
----
-
-## Configuration
-
-All settings are centralized in `src/config.py`:
-
-```python
-# Switch tuning strategy
-TRAINING.use_optuna = False   # GridSearchCV (default)
-TRAINING.use_optuna = True    # Optuna (Bayesian)
-
-# Adjust trials (Optuna only)
-TRAINING.optuna_n_trials = 50
-```
+- 📖 [Architecture Guide](docs/architecture.md) — System design with Mermaid diagrams
+- 🧠 [ML Methodology](docs/methodology.md) — Pipeline, feature selection, model details
+- 🏗️ [Results & Metrics](docs/results.md) — Performance analysis and error patterns
+- 📋 [Model Card](MODEL_CARD.md) — Model details, performance, and usage
 
 ---
 
@@ -445,7 +510,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 | Name | Primary Responsibilities |
 |------|--------------------------|
-| **M. Khizar Akram (Team Lead)** | Project architecture, application development, deployment, integration, significant contributions to data preparation, preprocessing, and machine learning pipeline |
+| **M. Khizar Akram (Team Lead)** | Project Lead — Led overall project architecture and integration, designed and implemented the application layer, deployment pipeline, FastAPI services, Next.js frontend integration, and contributed extensively to data preprocessing and machine learning pipeline development |
 | **Safwan Marwat** | Data collection, exploration, and analysis |
 | **Syed Mughees** | Preprocessing pipelines and feature engineering |
 | **Ifrahim Yousuf** | Model training, evaluation, and experimentation |
