@@ -2,20 +2,20 @@
 
 # EduRisk AI
 
-### Predicting Academic Risk Before It Becomes a Crisis
+### Production-Oriented Machine Learning for Academic Risk Prediction
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-41B883.svg?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io/)
 [![SHAP](https://img.shields.io/badge/SHAP-0.43+-E0003D.svg?style=for-the-badge&logo=python&logoColor=white)](https://shap.readthedocs.io/)
-[![Optuna](https://img.shields.io/badge/Optuna-3.4+-9B59B6.svg?style=for-the-badge&logo=optuna&logoColor=white)](https://optuna.org/)
-[![Gradio](https://img.shields.io/badge/Gradio-4.0+-FF5722.svg?style=for-the-badge&logo=gradio&logoColor=white)](https://www.gradio.app/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-14+-000000.svg?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-62%20passing-brightgreen.svg?style=for-the-badge)](#testing)
 
 <br>
 
-An end-to-end machine learning system that predicts the **academic risk level** (Low / Medium / High) of university students using self-reported lifestyle, psychological, and academic indicators — with **SHAP explainability**, a **Next.js + Tailwind frontend**, and a **FastAPI REST API**.
+**EduRisk AI is a production-oriented machine learning platform for predicting academic risk using explainable AI.** Built with Python, FastAPI, Next.js, SHAP, and Scikit-learn, it demonstrates the complete machine learning lifecycle — from data preprocessing and model training to real-time inference and interactive visualization.
 
 [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Screenshots](#-screenshots) • [Results](#-results) • [Deployment](#-deployment) • [Documentation](#-documentation)
 
@@ -23,27 +23,70 @@ An end-to-end machine learning system that predicts the **academic risk level** 
 
 ---
 
+## Why This Project?
+
+Most machine learning repositories stop at training a model.
+
+EduRisk AI was designed to demonstrate **production-oriented machine learning engineering** by combining:
+
+- Reproducible preprocessing pipelines with no data leakage
+- Explainable AI with SHAP (global + per-prediction)
+- REST APIs with FastAPI
+- Interactive web applications with Next.js and Tailwind CSS
+- Modular software architecture across 8+ packages
+- Automated testing (62 unit tests)
+- Containerized deployment with Docker
+
+The project emphasizes **engineering quality** as much as predictive performance.
+
+---
+
+## Tech Stack
+
+```
+Frontend          Backend           Machine Learning
+─────────────     ─────────────     ─────────────────
+Next.js           FastAPI           Scikit-learn
+Tailwind CSS      Gradio            XGBoost
+TypeScript        Uvicorn           Optuna
+Framer Motion                       SHAP
+
+Data              DevOps            Testing
+─────────────     ─────────────     ─────────────────
+Pandas            Docker            Pytest
+NumPy             GitHub Actions    Coverage
+Kaggle API
+```
+
+---
+
 ## Overview
 
 Every year, universities lose students to academic failure and mental health crises that could have been intercepted earlier. **EduRisk AI** uses machine learning to predict which students are at high academic risk based on survey data — and explains exactly why.
 
-The system compares **four classifiers** — Random Forest, SVM, XGBoost, and MLP — with hyperparameter tuning (GridSearchCV or Optuna), cross-validation, and SHAP-based explainability. A Gradio web interface provides real-time risk assessment with per-prediction feature contribution analysis.
+The system compares **four classifiers** — Random Forest, SVM, XGBoost, and MLP — with hyperparameter tuning (GridSearchCV or Optuna), cross-validation, and SHAP-based explainability. The same prediction engine serves three interfaces: a Next.js web app, a FastAPI REST API, and a Gradio dashboard.
 
-### Key Features
+### Capabilities
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-Model Comparison** | Random Forest, SVM (RBF), XGBoost, MLP |
-| **Hyperparameter Tuning** | GridSearchCV (default) or Optuna (Bayesian) |
-| **SHAP Explainability** | Global feature importance + per-prediction waterfall plots |
-| **Risk Engineering** | Composite scoring → 3-class academic risk levels |
-| **Live Dashboard** | Modern Gradio UI with risk gauge, probability charts, analytics |
-| **Next.js Frontend** | Professional dark-mode UI with Tailwind CSS + Framer Motion |
-| **REST API** | FastAPI service with /predict, /health, /model/info endpoints |
-| **Prediction Logging** | Timestamped CSV with analytics and export |
-| **Error Analysis** | Misclassification patterns and feature comparison |
-| **Reproducible Pipeline** | No data leakage, fixed random seeds, saved artifacts |
-| **62 Unit Tests** | Comprehensive test coverage across all modules |
+**Machine Learning**
+- Multi-model training and comparison (Random Forest, SVM, XGBoost, MLP)
+- Hyperparameter optimization (GridSearchCV + Optuna Bayesian)
+- SHAP explainability with waterfall plots and human-readable interpretations
+- Composite risk scoring → 3-class academic risk levels
+- Error analysis with misclassification patterns
+
+**Engineering**
+- FastAPI REST API with `/predict`, `/health`, `/model/info` endpoints
+- Next.js frontend with dark-mode UI, animated gauges, and SHAP visualizations
+- Gradio dashboard with real-time risk assessment
+- Docker containerization
+- Timestamped prediction logging with analytics
+
+**MLOps**
+- Reproducible pipeline (no data leakage, fixed random seeds)
+- Centralized configuration management
+- Saved model artifacts and preprocessing pipelines
+- 62 unit tests across all modules
 
 ---
 
@@ -78,6 +121,8 @@ python -m src.training.trainer
 ---
 
 ## Architecture
+
+EduRisk AI separates training, inference, and presentation into independent layers, allowing the same prediction engine to serve both the REST API and web interfaces.
 
 ```mermaid
 graph TB
@@ -250,14 +295,19 @@ flowchart TD
 
 ## Results
 
+> **Best Performing Model — Random Forest**
+>
+> - Accuracy: **85.58%**
+> - ROC-AUC: **94.92%**
+> - Cross-validation: **85.27 ± 0.39%**
+> - Selected for deployment due to its balance of predictive performance and interpretability.
+
 | Model | Accuracy | ROC-AUC | 3-Fold CV |
 |-------|----------|---------|-----------|
 | **Random Forest** | **85.58%** | **94.92%** | 85.27 ± 0.39% |
 | XGBoost | 85.24% | 95.02% | 85.88 ± 0.27% |
 | MLP | 85.18% | 94.69% | 84.66 ± 0.46% |
 | SVM | 82.12% | 93.10% | 82.40 ± 0.19% |
-
-**Best Model:** Random Forest — 85.58% accuracy, 94.92% ROC-AUC
 
 ![Model Comparison](assets/images/model-comparison.png)
 
@@ -368,10 +418,10 @@ TRAINING.optuna_n_trials = 50
 - [x] FastAPI REST API alongside Gradio
 - [x] Next.js + Tailwind professional frontend with SHAP explainability
 - [ ] MLflow experiment tracking
-- [ ] PostgreSQL prediction logging
-- [ ] A/B testing framework
-- [ ] Student dashboard with historical trends
-- [ ] Integration with university SIS
+- [ ] Cloud deployment
+- [ ] Continuous model monitoring
+- [ ] Authentication and multi-user support
+- [ ] Expanded dataset validation
 
 ---
 
@@ -391,14 +441,14 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <div align="center">
 
-**Built with by the EduRisk AI Team**
+### Contributors
 
-| Name | Module |
-|------|--------|
-| **M. Khizar Akram** | App & Deployment (Team Lead) |
-| **Safwan Marwat** | Data Collection & EDA |
-| **Syed Mughees** | Preprocessing & Feature Engineering |
-| **Ifrahim Yousuf** | Model Training & Evaluation |
+| Name | Primary Responsibilities |
+|------|--------------------------|
+| **M. Khizar Akram (Team Lead)** | Project architecture, application development, deployment, integration, significant contributions to data preparation, preprocessing, and machine learning pipeline |
+| **Safwan Marwat** | Data collection, exploration, and analysis |
+| **Syed Mughees** | Preprocessing pipelines and feature engineering |
+| **Ifrahim Yousuf** | Model training, evaluation, and experimentation |
 
 [![Khizar](https://img.shields.io/badge/Khizar-Akram-blue?style=flat-square)](https://github.com/Khizar525)
 
