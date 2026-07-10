@@ -31,12 +31,22 @@ class RiskPredictor:
         """Lazy-load SHAP explainer."""
         if self._explainer is None:
             import shap
-            if get_shap_compatible_model(type(self.model).__name__):
+            # Check if model is tree-based (supports TreeExplainer)
+            model_type = type(self.model).__name__
+            is_tree = any(
+                kw in model_type.lower()
+                for kw in ["forest", "xgb", "gradient", "tree"]
+            )
+            if is_tree:
                 self._explainer = shap.TreeExplainer(self.model)
             else:
-                # Fallback — will be slow
+                # KernelExplainer for SVM/MLP — slower but works
+                background = shap.sample(
+                    self.scaler.transform(np.zeros((1, len(self.feature_names)))),
+                    50,
+                )
                 self._explainer = shap.KernelExplainer(
-                    self.model.predict_proba, shap.sample(self.scaler.transform(np.zeros((1, len(self.feature_names)))), 50)
+                    self.model.predict_proba, background
                 )
         return self._explainer
 

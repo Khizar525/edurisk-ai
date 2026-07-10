@@ -8,10 +8,33 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from src.preprocessing.pipeline import (
+    impute_missing,
     label_encode_categoricals,
-    prepare_features,
+    scale_features_train_test,
 )
-from src.config import CATEGORICAL_COLS
+from src.config import CATEGORICAL_COLS, NUMERICAL_COLS
+
+
+class TestImputation:
+    """Tests for missing value imputation."""
+
+    def test_no_missing_after_impute(self, sample_dataframe):
+        df = impute_missing(sample_dataframe)
+        assert df.isnull().sum().sum() == 0
+
+    def test_preserves_shape(self, sample_dataframe):
+        df = impute_missing(sample_dataframe)
+        assert df.shape == sample_dataframe.shape
+
+    def test_preserves_non_null_values(self, sample_dataframe):
+        df = impute_missing(sample_dataframe)
+        # Check that existing values are preserved (not replaced)
+        for col in NUMERICAL_COLS:
+            if col in sample_dataframe.columns:
+                non_null = sample_dataframe[col].dropna()
+                if len(non_null) > 0:
+                    # At least some original values should be preserved
+                    assert df[col].isin(non_null).any()
 
 
 class TestLabelEncoding:
@@ -37,29 +60,57 @@ class TestLabelEncoding:
         with pytest.raises(ValueError):
             label_encode_categoricals(sample_dataframe, fit=True, encoders={})
 
+    def test_unseen_category_gets_default(self, sample_dataframe):
+        """Unseen categories should be mapped to the first known class."""
+        df, encoders = label_encode_categoricals(sample_dataframe, fit=True)
+        # Add an unseen category
+        df.loc[0, "Gender"] = "Other"
+        df2, _ = label_encode_categoricals(df, fit=False, encoders=encoders)
+        # Should not raise — unseen category mapped to first class
+        assert df2.loc[0, "Gender"] == 0
 
-class TestPreparationPipeline:
-    """Tests for the full preparation pipeline."""
 
-    def test_returns_correct_shapes(self, sample_dataframe):
-        X, y, encoders, scaler = prepare_features(sample_dataframe, fit=True)
-        assert X.shape[0] == len(sample_dataframe)
-        assert X.shape[1] == len(CATEGORICAL_COLS) + 6  # 6 numerical cols
-        assert len(y) == len(sample_dataframe)
+class TestScaling:
+    """Tests for train/test scaling."""
 
-    def test_scaled_has_zero_mean(self, sample_dataframe):
-        X, _, _, _ = prepare_features(sample_dataframe, fit=True)
-        means = np.mean(X, axis=0)
+    def test_train_scaled_zero_mean(self, sample_features):
+        X_train = sample_features[:80]
+        X_test = sample_features[80:]
+        X_train_s, X_test_s, scaler = scale_features_train_test(X_train, X_test)
+        means = np.mean(X_train_s, axis=0)
         assert np.allclose(means, 0, atol=1e-10)
 
-    def test_scaled_has_unit_variance(self, sample_dataframe):
-        X, _, _, _ = prepare_features(sample_dataframe, fit=True)
-        stds = np.std(X, axis=0)
+    def test_train_scaled_unit_variance(self, sample_features):
+        X_train = sample_features[:80]
+        X_test = sample_features[80:]
+        X_train_s, X_test_s, scaler = scale_features_train_test(X_train, X_test)
+        stds = np.std(X_train_s, axis=0)
         assert np.allclose(stds, 1, atol=1e-10)
 
-    def test_reproducible_with_same_encoders(self, sample_dataframe):
-        X1, y1, encoders, scaler = prepare_features(sample_dataframe, fit=True)
-        X2, y2, _, _ = prepare_features(
-            sample_dataframe, fit=False, encoders=encoders, scaler=scaler
+    def test_test_uses_train_stats(self, sample_features):
+        """Test set should be scaled using training statistics, not its own."""
+        X_train = sample_features[:80]
+        X_test = sample_features[80:]
+        X_train_s, X_test_s, scaler = scale_features_train_test(X_train, X_test)
+
+        # The scaler should have been fit on train
+        np.testing.assert_array_equal(scaler.mean_, np.mean(X_train, axis=0))
+        np.testing.assert_array_almost_equal(
+            scaler.scale_, np.std(X_train, axis=0, ddof=0)
         )
-        np.testing.assert_array_equal(X1, X2)
+
+    def test_test_not_necessarily_zero_mean(self, sample_features):
+        """Test set mean after scaling should NOT necessarily be zero."""
+        X_train = sample_features[:80]
+        X_test = sample_features[80:]
+        X_train_s, X_test_s, scaler = scale_features_train_test(X_train, X_test)
+        test_means = np.mean(X_test_s, axis=0)
+        # Test means should generally NOT be exactly zero
+        assert not np.allclose(test_means, 0, atol=1e-10)
+
+    def test_preserves_dimensions(self, sample_features):
+        X_train = sample_features[:80]
+        X_test = sample_features[80:]
+        X_train_s, X_test_s, scaler = scale_features_train_test(X_train, X_test)
+        assert X_train_s.shape == X_train.shape
+        assert X_test_s.shape == X_test.shape

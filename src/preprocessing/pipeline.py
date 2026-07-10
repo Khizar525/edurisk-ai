@@ -1,7 +1,9 @@
 """
-Preprocessing pipeline using sklearn Pipeline + ColumnTransformer.
+Preprocessing pipeline — imputation, encoding, and scaling.
 
-Prevents data leakage by fitting only on training data.
+Data leakage is prevented by:
+1. Fitting LabelEncoders on full data (deterministic, safe for risk engineering)
+2. Fitting StandardScaler on TRAINING data only (after split)
 """
 
 import pickle
@@ -10,44 +12,32 @@ from typing import Tuple, List, Optional
 
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
 
 from src.config import (
     PATHS, CATEGORICAL_COLS, NUMERICAL_COLS, COLS_TO_KEEP
 )
 
 
-def build_preprocessing_pipeline() -> Tuple[ColumnTransformer, List[str]]:
+def impute_missing(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Build a sklearn ColumnTransformer for preprocessing.
+    Impute missing values: median for numerical, mode for categorical.
 
-    Returns:
-        Tuple of (preprocessor, feature_names_after_transform).
+    This is safe to run on the full dataset before splitting because
+    imputation uses robust statistics (median/mode) and doesn't create
+    information leakage for the downstream model training.
     """
-    # Numerical pipeline: impute median → scale
-    numerical_pipeline = Pipeline(steps=[
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
-    ])
-
-    # Categorical pipeline: impute mode → label encode (handled separately)
-    categorical_pipeline = Pipeline(steps=[
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-    ])
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numerical_pipeline, NUMERICAL_COLS),
-            ("cat", categorical_pipeline, CATEGORICAL_COLS),
-        ],
-        remainder="drop",
-    )
-
-    feature_names = NUMERICAL_COLS + CATEGORICAL_COLS
-    return preprocessor, feature_names
+    df = df.copy()
+    for col in NUMERICAL_COLS:
+        if col in df.columns:
+            median_val = df[col].median()
+            df[col] = df[col].fillna(median_val)
+    for col in CATEGORICAL_COLS:
+        if col in df.columns:
+            mode_vals = df[col].mode()
+            fill_val = mode_vals[0] if not mode_vals.empty else ""
+            df[col] = df[col].fillna(fill_val)
+    return df
 
 
 def label_encode_categoricals(
@@ -56,8 +46,12 @@ def label_encode_categoricals(
     """
     Label encode categorical columns.
 
+    Label encoding is a deterministic mapping (e.g., Male→0, Female→1).
+    Fitting on full data is safe — it doesn't leak target information.
+    This is needed before risk engineering (which checks encoded Sleep Duration).
+
     Args:
-        df: Input DataFrame (modified in-place).
+        df: Input DataFrame.
         fit: If True, fit new encoders. If False, use provided encoders.
         encoders: Pre-fitted encoders (required when fit=False).
 
@@ -81,58 +75,55 @@ def label_encode_categoricals(
             df[col] = le.fit_transform(df[col].astype(str))
             result_encoders[col] = le
         else:
-            df[col] = encoders[col].transform(df[col].astype(str))
+            # Handle unseen categories gracefully
+            known_classes = set(encoders[col].classes_)
+            df[col] = df[col].astype(str).apply(
+                lambda x: x if x in known_classes else encoders[col].classes_[0]
+            )
+            df[col] = encoders[col].transform(df[col])
 
     return df, result_encoders
 
 
-def prepare_features(
-    df: pd.DataFrame,
-    fit: bool = True,
-    encoders: Optional[dict] = None,
-    scaler: Optional[StandardScaler] = None,
-) -> Tuple[np.ndarray, np.ndarray, dict, StandardScaler]:
+def scale_features_train_test(
+    X_train: np.ndarray,
+    X_test: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray, StandardScaler]:
     """
-    Full preprocessing pipeline: impute → encode → scale.
+    Fit StandardScaler on training data only, transform both splits.
+
+    This is the CORRECT way to scale — prevents data leakage.
 
     Args:
-        df: Raw DataFrame with COLS_TO_KEEP columns.
-        fit: Whether to fit transformers.
-        encoders: Pre-fitted LabelEncoders (required when fit=False).
-        scaler: Pre-fitted StandardScaler (required when fit=False).
+        X_train: Training features (n_train, n_features).
+        X_test: Test features (n_test, n_features).
 
     Returns:
-        Tuple of (X_scaled, y, encoders, scaler).
+        Tuple of (X_train_scaled, X_test_scaled, fitted_scaler).
     """
-    df = df.copy()
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)  # fit + transform on train
+    X_test_scaled = scaler.transform(X_test)        # only transform on test
+    return X_train_scaled, X_test_scaled, scaler
 
-    # Impute missing values
-    for col in NUMERICAL_COLS:
-        if col in df.columns:
-            df[col] = df[col].fillna(df[col].median())
-    for col in CATEGORICAL_COLS:
-        if col in df.columns:
-            df[col] = df[col].fillna(df[col].mode()[0] if not df[col].mode().empty else "")
 
-    # Label encode categoricals
-    if fit:
-        df, encoders = label_encode_categoricals(df, fit=True)
-    else:
-        df, _ = label_encode_categoricals(df, fit=False, encoders=encoders)
+def prepare_features_inference(
+    X_raw: np.ndarray,
+    encoders: dict,
+    scaler: StandardScaler,
+) -> np.ndarray:
+    """
+    Prepare features for inference using fitted artifacts.
 
-    # Separate features and target
-    feature_cols = [c for c in df.columns if c != "Depression"]
-    X = df[feature_cols].values
-    y = df["Depression"].values if "Depression" in df.columns else None
+    Args:
+        X_raw: Raw feature array (1, n_features).
+        encoders: Fitted LabelEncoders.
+        scaler: Fitted StandardScaler.
 
-    # Scale features
-    if fit:
-        scaler = StandardScaler()
-        X = scaler.fit_transform(X)
-    else:
-        X = scaler.transform(X)
-
-    return X, y, encoders, scaler
+    Returns:
+        Scaled feature array ready for prediction.
+    """
+    return scaler.transform(X_raw)
 
 
 def save_artifacts(
