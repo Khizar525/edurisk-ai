@@ -1,7 +1,5 @@
 <div align="center">
 
-![EduRisk AI Banner](assets/images/banner.png)
-
 # EduRisk AI
 
 ### Explainable Machine Learning for Academic Risk Prediction
@@ -13,7 +11,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-14+-000000.svg?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Tests](https://img.shields.io/badge/62-Tests-passing-brightgreen.svg?style=for-the-badge)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-62%20passing-brightgreen.svg?style=for-the-badge)](#testing)
 
 <br>
 
