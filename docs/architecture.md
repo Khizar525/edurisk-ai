@@ -138,3 +138,114 @@ edurisk-ai/
 4. **Reproducibility**: Fixed random seeds, deterministic pipelines
 5. **Testability**: Each module is independently testable
 6. **Graceful Degradation**: SHAP falls back gracefully if computation fails
+
+---
+
+## Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "Client"
+        A[Browser] --> B[Next.js Frontend :3000]
+        A --> C[Gradio Dashboard :7860]
+        A --> D[Swagger UI :8000/docs]
+    end
+
+    subgraph "Backend"
+        B --> E[FastAPI REST API :8000]
+        C --> F[Gradio Server :7860]
+        E --> G[Prediction Service]
+        F --> G
+    end
+
+    subgraph "ML Engine"
+        G --> H[RiskPredictor]
+        H --> I[Random Forest Model]
+        H --> J[SHAP TreeExplainer]
+        H --> K[Preprocessing Pipeline]
+    end
+
+    subgraph "Storage"
+        I --> L[models/risk_model.pkl]
+        K --> M[models/scaler.pkl]
+        J --> N[models/shap_explainer.pkl]
+        H --> O[predictions/predictions.csv]
+    end
+
+    subgraph "Deployment"
+        P[Docker] --> Q[Container :7860]
+        R[GitHub Actions] --> S[CI/CD Pipeline]
+        S --> T[Tests + Lint + Build]
+    end
+
+    style A fill:#e3f2fd
+    style G fill:#fff3e0
+    style P fill:#e8f5e9
+```
+
+### Ports
+
+| Service | Port | URL |
+|---------|------|-----|
+| Next.js Frontend | 3000 | http://localhost:3000 |
+| FastAPI REST API | 8000 | http://localhost:8000 |
+| Swagger Docs | 8000 | http://localhost:8000/docs |
+| Gradio Dashboard | 7860 | http://localhost:7860 |
+
+---
+
+## Inference Flow (Request Lifecycle)
+
+```mermaid
+flowchart TD
+    A[Client Request] --> B{Request Type}
+    
+    B -->|POST /predict| C[FastAPI Router]
+    B -->|Gradio Input| D[Gradio Handler]
+    
+    C --> E[Pydantic Validation]
+    D --> E
+    
+    E --> F[Input Preprocessing]
+    F --> G[Categorical Encoding]
+    G --> H[Feature Scaling]
+    
+    H --> I[RiskPredictor.predict]
+    I --> J[Model predict_proba]
+    J --> K[Argmax → Risk Level]
+    
+    I --> L[SHAP TreeExplainer]
+    L --> M[Compute SHAP Values]
+    M --> N[Sort by Magnitude]
+    N --> O[Top Risk + Protective Factors]
+    
+    K --> P[Build Response]
+    O --> P
+    
+    P --> Q[Prediction Logger]
+    Q --> R[Append to CSV]
+    
+    P --> S[Return JSON]
+    
+    style A fill:#e3f2fd
+    style I fill:#fff3e0
+    style L fill:#fce4ec
+    style S fill:#e8f5e9
+```
+
+### Response Structure
+
+```json
+{
+  "prediction": 2,
+  "risk_level": "High Risk",
+  "confidence": "94.9%",
+  "probabilities_raw": {"0": 0.0, "1": 0.05, "2": 0.95},
+  "shap": {
+    "sorted_features": ["Suicidal Thoughts", "Financial Stress", ...],
+    "shap_values": [0.332, 0.117, ...],
+    "top_risk": [...],
+    "top_protective": [...]
+  }
+}
+```

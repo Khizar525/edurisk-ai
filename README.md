@@ -409,6 +409,7 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [Results & Metrics](docs/results.md) — performance analysis and error patterns
 - [Model Card](MODEL_CARD.md) — model details, fairness, and usage
 - [Brand Guide](docs/brand.md) — visual identity, color palette, typography
+- [Visual Assets](docs/assets.md) — screenshots, charts, diagrams catalog
 - [Social Preview](docs/social-preview.md) — GitHub banner and OG image setup
 - [Contributing Guide](CONTRIBUTING.md) — how to contribute
 
