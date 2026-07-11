@@ -411,6 +411,7 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [Interview Prep](docs/interview-prep.md) — 30 Q&As for technical interviews
 - [Portfolio Material](docs/portfolio.md) — resume bullets, pitches, descriptions
 - [LinkedIn Launch Kit](docs/linkedin.md) — posts, carousel, article outline
+- [Final Review](docs/final-review.md) — scoring and recommendations
 - [Model Card](MODEL_CARD.md) — model details, fairness, and usage
 - [Brand Guide](docs/brand.md) — visual identity, color palette, typography
 - [Visual Assets](docs/assets.md) — screenshots, charts, diagrams catalog
