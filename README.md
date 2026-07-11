@@ -409,6 +409,7 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [Results & Metrics](docs/results.md) — performance analysis and error patterns
 - [Engineering Case Study](docs/case-study.md) — full technical narrative
 - [Interview Prep](docs/interview-prep.md) — 30 Q&As for technical interviews
+- [Portfolio Material](docs/portfolio.md) — resume bullets, pitches, descriptions
 - [Model Card](MODEL_CARD.md) — model details, fairness, and usage
 - [Brand Guide](docs/brand.md) — visual identity, color palette, typography
 - [Visual Assets](docs/assets.md) — screenshots, charts, diagrams catalog
