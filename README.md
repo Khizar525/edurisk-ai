@@ -408,6 +408,7 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [ML Methodology](docs/methodology.md) — pipeline, feature selection, model details
 - [Results & Metrics](docs/results.md) — performance analysis and error patterns
 - [Engineering Case Study](docs/case-study.md) — full technical narrative
+- [Interview Prep](docs/interview-prep.md) — 30 Q&As for technical interviews
 - [Model Card](MODEL_CARD.md) — model details, fairness, and usage
 - [Brand Guide](docs/brand.md) — visual identity, color palette, typography
 - [Visual Assets](docs/assets.md) — screenshots, charts, diagrams catalog
