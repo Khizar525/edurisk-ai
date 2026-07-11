@@ -115,8 +115,8 @@ class PredictionResponse(BaseModel):
     prediction: int = Field(..., description="Risk level (0=Low, 1=Medium, 2=High)")
     risk_level: str = Field(..., description="Human-readable risk level")
     risk_label: str = Field(..., description="Risk label without emoji")
-    confidence: str = Field(..., description="Model confidence percentage")
-    confidence_value: float = Field(..., description="Raw confidence value (0-1)")
+    predicted_probability: str = Field(..., description="Predicted probability of assigned risk class")
+    predicted_probability_value: float = Field(..., description="Raw probability value (0-1)")
     advice: str = Field(..., description="Recommendation based on risk level")
     probabilities: dict = Field(..., description="Class probabilities (emoji keys)")
     probabilities_raw: dict = Field(..., description="Class probabilities (numeric keys: 0=Low, 1=Med, 2=High)")
@@ -204,8 +204,8 @@ async def predict(request: PredictionRequest):
         prediction=result["prediction"],
         risk_level=result["risk_level"],
         risk_label=result["risk_label"],
-        confidence=result["confidence"],
-        confidence_value=result["confidence_value"],
+        predicted_probability=result["predicted_probability"],
+        predicted_probability_value=result["predicted_probability_value"],
         advice=result["advice"],
         probabilities=result["probabilities"],
         probabilities_raw=result["probabilities_raw"],

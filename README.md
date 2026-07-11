@@ -171,6 +171,8 @@ flowchart LR
     style F fill:#c8e6c9
 ```
 
+> **Leakage safety**: Imputation (median/mode) and label encoding happen before the split. This is safe — median/mode are robust statistics that don't leak target information, and label encoding is a deterministic mapping (Male→0, Female→1). The scaler is the only transformer fitted after the split, on training data only.
+
 ---
 
 ## Screenshots
@@ -277,7 +279,7 @@ curl -X POST http://localhost:8000/predict \
 {
   "prediction": 2,
   "risk_level": "High Risk",
-  "confidence": "94.9%",
+  "predicted_probability": "94.9%",
   "shap": {
     "top_risk": [{"feature": "Suicidal Thoughts", "impact": 0.332}],
     "top_protective": [{"feature": "CGPA", "impact": -0.112}]
@@ -421,17 +423,18 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 **M. Khizar Akram** — Team Lead
 
-Architecture · FastAPI · Next.js · Deployment
+Architecture · FastAPI · Next.js · CI/CD · Deployment
 
 <br>
 
-### Project Contributors
+### Contributors
 
 | Name | Contribution |
 |------|-------------|
-| Safwan Marwat | Data Collection & Exploration |
-| Syed Mughees | Preprocessing & Feature Engineering |
-| Ifrahim Yousuf | Model Training & Evaluation |
+| M. Khizar Akram | End-to-end system, REST API, frontend, Docker, documentation |
+| Safwan Marwat | Data collection, Kaggle integration, exploratory analysis |
+| Syed Mughees | Preprocessing pipeline, feature engineering, label encoding |
+| Ifrahim Yousuf | Model training, hyperparameter tuning, evaluation metrics |
 
 [![GitHub](https://img.shields.io/badge/GitHub-Khizar525-181717.svg?style=flat-square&logo=github&logoColor=white)](https://github.com/Khizar525)
 

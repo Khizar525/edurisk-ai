@@ -239,7 +239,7 @@ flowchart TD
 {
   "prediction": 2,
   "risk_level": "High Risk",
-  "confidence": "94.9%",
+  "predicted_probability": "94.9%",
   "probabilities_raw": {"0": 0.0, "1": 0.05, "2": 0.95},
   "shap": {
     "sorted_features": ["Suicidal Thoughts", "Financial Stress", ...],

@@ -22,8 +22,8 @@ export interface PredictionResponse {
   prediction: number;
   risk_level: string;
   risk_label: string;
-  confidence: string;
-  confidence_value: number;
+  predicted_probability: string;
+  predicted_probability_value: number;
   advice: string;
   probabilities: Record<string, number>;
   probabilities_raw: Record<string, number>;

@@ -107,8 +107,8 @@ class RiskPredictor:
             "prediction": prediction,
             "risk_level": RISK_LABELS_EMOJI[prediction],
             "risk_label": RISK_LABELS[prediction],
-            "confidence": f"{max(probs) * 100:.1f}%",
-            "confidence_value": float(max(probs)),
+            "predicted_probability": f"{max(probs) * 100:.1f}%",
+            "predicted_probability_value": float(max(probs)),
             "advice": RISK_ADVICE[prediction],
             "probabilities": {
                 RISK_LABELS_EMOJI[i]: round(float(p) * 100, 1)

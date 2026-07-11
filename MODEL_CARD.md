@@ -160,7 +160,7 @@ result = predictor.predict(
     family_history="Yes", suicidal_thoughts="Yes",
 )
 print(result["risk_level"])  # ❌ High Risk
-print(result["confidence"])  # 87.3%
+print(result["predicted_probability"])  # 87.3%
 ```
 
 ### REST API

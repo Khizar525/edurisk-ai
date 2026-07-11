@@ -148,7 +148,7 @@ export default function Home() {
                     <div className="flex justify-center">
                       <RiskGauge
                         prediction={result.prediction}
-                        confidence={result.confidence_value * 100}
+                        confidence={result.predicted_probability_value * 100}
                       />
                     </div>
                   </div>

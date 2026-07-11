@@ -68,7 +68,7 @@ class TestPredictEndpoint:
         data = response.json()
         assert "prediction" in data
         assert "risk_level" in data
-        assert "confidence" in data
+        assert "predicted_probability" in data
         assert "probabilities" in data
         assert "shap" in data
         assert data["prediction"] in [0, 1, 2]

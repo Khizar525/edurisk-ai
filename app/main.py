@@ -173,7 +173,7 @@ def predict_risk(
     logger.log(inputs, result)
 
     pred = result["prediction"]
-    confidence = result["confidence_value"] * 100
+    confidence = result["predicted_probability_value"] * 100
 
     # ── Gauge Image ────────────────────────────────────────────
     gauge_img = create_gauge(pred, confidence)
