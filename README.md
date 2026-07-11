@@ -17,11 +17,28 @@
 
 **EduRisk AI predicts which university students are at academic risk — and explains exactly why.**
 
-It combines four ML classifiers with SHAP explainability, a FastAPI REST API, and an interactive Next.js dashboard to deliver real-time risk assessments with per-prediction feature contributions.
-
-[Quick Start](#-quick-start) • [Architecture](#-architecture) • [Screenshots](#-screenshots) • [Results](#-results) • [API](#rest-api) • [Documentation](#documentation)
+[Quick Start](#quick-start) • [Architecture](#architecture) • [Screenshots](#screenshots) • [Results](#results) • [API](#rest-api)
 
 </div>
+
+---
+
+### Pipeline Overview
+
+```mermaid
+flowchart LR
+    A["Dataset\n27,901 students"] --> B["Preprocessing\nImpute → Encode → Scale"]
+    B --> C["Training\n4 models compared"]
+    C --> D["Best Model\nRandom Forest"]
+    D --> E["FastAPI\nREST API"]
+    D --> F["Next.js\nFrontend"]
+    D --> G["SHAP\nExplainability"]
+    E --> H["Prediction\n+ waterfall plot"]
+
+    style A fill:#e3f2fd
+    style D fill:#c8e6c9
+    style H fill:#fff3e0
+```
 
 ---
 
@@ -40,24 +57,56 @@ Most ML repositories stop at training a model. EduRisk AI goes further — it de
 | **Testing** | 62 unit tests across all modules |
 | **Deployment** | Docker containerization, CI/CD with GitHub Actions |
 
-The project emphasizes **engineering quality** as much as predictive performance.
-
 ---
 
 ## Tech Stack
 
-<div align="center">
-
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | Next.js 15, TypeScript, Tailwind CSS v4, Framer Motion |
+| **Frontend** | Next.js, TypeScript, Tailwind CSS, Framer Motion |
 | **API** | FastAPI, Uvicorn, Pydantic validation |
 | **ML** | Scikit-learn, XGBoost, SHAP, Optuna |
 | **Data** | Pandas, NumPy, Kaggle API |
 | **DevOps** | Docker, GitHub Actions, Pytest |
-| **Dashboard** | Gradio (alternative interface) |
 
-</div>
+---
+
+## Quick Start
+
+```mermaid
+flowchart TD
+    A["Clone repo"] --> B["Install deps"]
+    B --> C["Train model"]
+    C --> D["Start API :8000"]
+    D --> E["Start Frontend :3000"]
+    E --> F["Open localhost:3000"]
+
+    style A fill:#e3f2fd
+    style C fill:#c8e6c9
+    style F fill:#fff3e0
+```
+
+```bash
+# Clone
+git clone https://github.com/Khizar525/edurisk-ai.git
+cd edurisk-ai
+
+# Setup
+python -m venv venv
+venv\Scripts\activate      # Windows
+pip install -r requirements.txt
+
+# Train
+python -m src.training.trainer
+
+# Launch API
+uvicorn app.api:app --host 0.0.0.0 --port 8000
+
+# Launch Frontend
+cd frontend && npm install && npm run dev
+```
+
+> Gradio is also available via `python -m app.main` as a lightweight alternative.
 
 ---
 
@@ -170,7 +219,7 @@ Although XGBoost achieved a slightly higher ROC-AUC (95.02%), Random Forest was 
 
 | Model | Accuracy | ROC-AUC | 3-Fold CV |
 |-------|----------|---------|-----------|
-| **Random Forest** | **85.58%** | **94.92%** | 85.27 ± 0.39% |
+| **Random Forest** | **85.58%** | **94.92%** | **85.27 ± 0.39%** |
 | XGBoost | 85.24% | 95.02% | 85.88 ± 0.27% |
 | MLP | 85.18% | 94.69% | 84.66 ± 0.46% |
 | SVM | 82.12% | 93.10% | 82.40 ± 0.19% |
@@ -228,71 +277,15 @@ curl -X POST http://localhost:8000/predict \
 {
   "prediction": 2,
   "risk_level": "High Risk",
-  "risk_label": "High Risk",
   "confidence": "94.9%",
-  "confidence_value": 0.949,
-  "probabilities_raw": {"0": 0.0, "1": 0.05, "2": 0.95},
   "shap": {
-    "sorted_features": ["Suicidal Thoughts", "Financial Stress", "CGPA"],
-    "shap_values": [0.332, 0.117, -0.112],
     "top_risk": [{"feature": "Suicidal Thoughts", "impact": 0.332}],
     "top_protective": [{"feature": "CGPA", "impact": -0.112}]
   }
 }
 ```
 
-Interactive docs available at `http://localhost:8000/docs` when the server is running.
-
----
-
-## Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/Khizar525/edurisk-ai.git
-cd edurisk-ai
-
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate      # Windows
-# source venv/bin/activate  # macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Launch the Application
-
-**1. Start the FastAPI backend**
-
-```bash
-uvicorn app.api:app --host 0.0.0.0 --port 8000
-# API docs: http://localhost:8000/docs
-```
-
-**2. Start the Next.js frontend**
-
-```bash
-cd frontend
-npm install
-npm run dev
-# Frontend: http://localhost:3000
-```
-
-> The Gradio interface is also available via `python -m app.main` as a lightweight alternative.
-
-### Train Models
-
-```bash
-python -m src.training.trainer
-```
-
-### Docker
-
-```bash
-cd docker
-docker-compose up --build
-```
+Interactive docs at `http://localhost:8000/docs`.
 
 ---
 
@@ -304,7 +297,7 @@ edurisk-ai/
 │   ├── main.py             # Gradio dashboard
 │   └── api.py              # FastAPI REST API
 ├── frontend/               # Next.js + Tailwind frontend
-│   └── src/components/     # React components (Gauge, SHAP, etc.)
+│   └── src/components/     # 6 React components
 ├── src/                    # Core ML library
 │   ├── config.py           # Centralized configuration
 │   ├── data/               # Data loading and validation
@@ -316,13 +309,11 @@ edurisk-ai/
 │   ├── inference/          # Prediction service and logging
 │   └── utils/              # Validators and helpers
 ├── tests/                  # 62 unit tests
-├── docs/                   # Architecture, methodology, results
+├── docs/                   # Documentation
 ├── assets/                 # Charts, screenshots, figures
 ├── models/                 # Saved model artifacts
 ├── data/                   # Raw and processed data
-├── docker/                 # Containerization
-├── scripts/                # Chart generation scripts
-└── notebooks/              # Jupyter notebooks
+└── docker/                 # Containerization
 ```
 
 ---
@@ -336,14 +327,13 @@ edurisk-ai/
 | Records | 27,901 |
 | Features Used | 11 (selected from 27) |
 | Target | 3-class Risk Level (Low / Medium / High) |
-| Source | Student self-report survey |
 
 ### Limitations
 
-- **Self-reported data** — features rely on student self-assessment, which may introduce response bias
-- **Survey bias** — collected via online surveys, potentially over-representing certain demographics
-- **Demographic limitations** — may not generalize across all university populations or cultural contexts
-- **Temporal snapshot** — represents a single point in time rather than longitudinal tracking
+- **Self-reported data** — features rely on student self-assessment
+- **Survey bias** — collected via online surveys
+- **Demographic limitations** — may not generalize across all populations
+- **Temporal snapshot** — single point in time, not longitudinal
 
 ---
 
@@ -351,54 +341,25 @@ edurisk-ai/
 
 ### Why Random Forest over XGBoost?
 
-XGBoost had slightly higher ROC-AUC (95.02% vs 94.92%), but Random Forest was selected because: (1) higher overall accuracy (85.58% vs 85.24%), (2) better calibration, (3) faster inference, and (4) TreeExplainer produces exact, consistent SHAP attributions — critical for explainability.
+XGBoost had slightly higher ROC-AUC (95.02% vs 94.92%), but Random Forest was selected because: (1) higher overall accuracy (85.58% vs 85.24%), (2) better calibration, (3) faster inference, and (4) TreeExplainer produces exact, consistent SHAP attributions.
 
-### Why SHAP over LIME or Permutation Importance?
+### Why SHAP over LIME?
 
-SHAP provides both global feature importance and per-prediction explanations with mathematical guarantees (Shapley values). TreeExplainer on tree models gives exact attributions in polynomial time, making it production-viable.
+SHAP provides both global feature importance and per-prediction explanations with mathematical guarantees (Shapley values). TreeExplainer on tree models gives exact attributions in polynomial time.
 
 ### Why FastAPI alongside Gradio?
 
-FastAPI provides automatic OpenAPI documentation, native async support, and Pydantic validation — making the API self-documenting and production-ready. Gradio serves as a rapid prototyping interface for demos.
-
-### Why Next.js over React + Vite?
-
-Next.js provides server-side rendering, file-based routing, and a mature ecosystem for deployment on Vercel. TypeScript + Tailwind CSS made building the dark-mode UI fast and maintainable.
-
----
-
-## Configuration
-
-All settings are centralized in `src/config.py`:
-
-```python
-# Switch tuning strategy
-TRAINING.use_optuna = False   # GridSearchCV (default)
-TRAINING.use_optuna = True    # Optuna (Bayesian)
-
-# Adjust trials (Optuna only)
-TRAINING.optuna_n_trials = 50
-```
+FastAPI provides automatic OpenAPI documentation, native async support, and Pydantic validation. Gradio serves as a rapid prototyping interface for demos.
 
 ---
 
 ## Testing
 
 ```bash
-# Run all tests
 python -m pytest tests/ -v
-
-# Run with coverage
-python -m pytest tests/ -v --cov=src --cov-report=html
 ```
 
-**62 tests** covering:
-- Preprocessing (imputation, encoding, scaling)
-- Training (model configs, Optuna, GridSearchCV)
-- Evaluation (metrics, error analysis, plots)
-- SHAP (helpers, local explanations, plots)
-- Inference (validation, prediction, logging)
-- API (FastAPI endpoints, request validation)
+**62 tests** covering preprocessing, training, evaluation, SHAP, inference, and API.
 
 ---
 
@@ -407,16 +368,22 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [Architecture Guide](docs/architecture.md) — system design with Mermaid diagrams
 - [ML Methodology](docs/methodology.md) — pipeline, feature selection, model details
 - [Results & Metrics](docs/results.md) — performance analysis and error patterns
-- [Engineering Case Study](docs/case-study.md) — full technical narrative
+- [Case Study](docs/case-study.md) — full engineering narrative
+- [Model Card](MODEL_CARD.md) — model details, fairness, and usage
+- [Contributing Guide](CONTRIBUTING.md) — how to contribute
+
+<details>
+<summary>Additional Resources</summary>
+
 - [Interview Prep](docs/interview-prep.md) — 30 Q&As for technical interviews
 - [Portfolio Material](docs/portfolio.md) — resume bullets, pitches, descriptions
 - [LinkedIn Launch Kit](docs/linkedin.md) — posts, carousel, article outline
-- [Final Review](docs/final-review.md) — scoring and recommendations
-- [Model Card](MODEL_CARD.md) — model details, fairness, and usage
 - [Brand Guide](docs/brand.md) — visual identity, color palette, typography
 - [Visual Assets](docs/assets.md) — screenshots, charts, diagrams catalog
 - [Social Preview](docs/social-preview.md) — GitHub banner and OG image setup
-- [Contributing Guide](CONTRIBUTING.md) — how to contribute
+- [Final Review](docs/final-review.md) — scoring and recommendations
+
+</details>
 
 ---
 
@@ -431,7 +398,6 @@ python -m pytest tests/ -v --cov=src --cov-report=html
 - [ ] MLflow experiment tracking
 - [ ] Cloud deployment (Vercel + Render)
 - [ ] Continuous model monitoring
-- [ ] Authentication and multi-user support
 
 ---
 
@@ -451,15 +417,22 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <div align="center">
 
-### Built by the EduRisk AI Team
+### Developed by
 
-| Name | Role |
-|------|------|
-| **M. Khizar Akram** | Team Lead — Architecture, FastAPI, Next.js, Deployment |
-| **Safwan Marwat** | Data Collection & Exploration |
-| **Syed Mughees** | Preprocessing & Feature Engineering |
-| **Ifrahim Yousuf** | Model Training & Evaluation |
+**M. Khizar Akram** — Team Lead
 
-[![GitHub](https://img.shields.io/badge/GitHub-Khizar525-181717.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Khizar525)
+Architecture · FastAPI · Next.js · Deployment
+
+<br>
+
+### Project Contributors
+
+| Name | Contribution |
+|------|-------------|
+| Safwan Marwat | Data Collection & Exploration |
+| Syed Mughees | Preprocessing & Feature Engineering |
+| Ifrahim Yousuf | Model Training & Evaluation |
+
+[![GitHub](https://img.shields.io/badge/GitHub-Khizar525-181717.svg?style=flat-square&logo=github&logoColor=white)](https://github.com/Khizar525)
 
 </div>
