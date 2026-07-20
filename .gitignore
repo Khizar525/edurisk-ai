@@ -73,3 +73,6 @@ kaggle.json
 *.tar.gz
 *.csv
 !requirements.txt
+
+# ── Gradio ─────────────────────────────────────────────────────
+.gradio/
